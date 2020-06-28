@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status  # http status
@@ -33,3 +34,12 @@ class HelloAPIVIEW(APIView):
 
     def delete(self, request):
         return Response({'method': 'delete'})
+
+
+class HelloVIEWSET(viewsets.ViewSet):
+
+    def list(self, request):
+        users = ['Mohamed El Rahali',
+                 'Anas Eit Lhioui']
+
+        return Response({'message': 'hello', 'users': users})
