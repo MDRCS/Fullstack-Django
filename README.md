@@ -34,3 +34,9 @@
     - after creating UserProfile and UserProfileManager in models.py i should config the Auth settings in settings.py
     - add this line in the end of settings.py -> AUTH_USER_MODEL = 'django_restapi.UserProfile'
 
+    - make a migration
+    + python manage.py makemigrations
+    django_restapi/migrations/0001_initial.py
+
+    + python manage.py migrate
+    ! if you had a problem with migration delete db.sqlite3
