@@ -40,3 +40,14 @@
 
     + python manage.py migrate
     ! if you had a problem with migration delete db.sqlite3
+
+    - Django Admin Panel
+    + create a superuser :
+
+    1- python manage.py createsuperuser
+    2- go to admin.py add :
+        from . import models
+        admin.site.register(models.UserProfile)
+
+    3- python manage.py runserver
+       check localhost:8080/admin
