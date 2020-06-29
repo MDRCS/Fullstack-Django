@@ -51,3 +51,9 @@
 
     3- python manage.py runserver
        check localhost:8080/admin
+
+
+    APIView allow us to define functions that match standard HTTP methods like GET,POST,PUT,PATCH,etc.
+    Viewsets allow us to define functions that match to common API object actions like :LIST, CREATE, RETRIEVE, UPDATE, etc.
+
+    Vieewsets are also used to write logic to perform standard database operations and to interface with a database back-end.And are usually used for existing database model to manage predefined objects
