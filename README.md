@@ -57,3 +57,16 @@
     Viewsets allow us to define functions that match to common API object actions like :LIST, CREATE, RETRIEVE, UPDATE, etc.
 
     Vieewsets are also used to write logic to perform standard database operations and to interface with a database back-end.And are usually used for existing database model to manage predefined objects
+        "token": "9262352dbe2f2c8d3f908da5c6034499a6ed6fbc"
+
+    + To Test Auhtorization :
+
+    1- we built an ViewSet for login, defined create/Post operation and made it return a token for a Login Email/Password.
+    2- run django server, go to /api/login enter infos and click post you will got a token save it.
+    3- go to chrome extensions download mod header, add this two headers :
+
+![](./static/mod_header.png)
+
+    4- go to /api/profile/1
+     -> now you can update the field not like before now you have a valid permissions.
+
