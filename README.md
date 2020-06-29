@@ -77,3 +77,22 @@
     $ python manage.py makemigrations
     $ python manage.py migrate
 
+
+    + Deployements :
+
+    1- Create an EC2 instance
+    2- login into and run wget github_account/setup.sh
+    3- chmod +x setup.sh and run sudo ./setup.sh
+    4- activate venv and run migration
+    5- add domain name into profiles_project/settings.py
+        ALLOWED_HOSTS = [
+            'ec2-18-130-20-217.eu-west-2.compute.amazonaws.com',
+            '127.0.0.1'
+        ]
+    6- supervisorctl restart all
+
+    - Test you api
+
+    1- /profile create one
+    2- login get the token and test all operations
+
