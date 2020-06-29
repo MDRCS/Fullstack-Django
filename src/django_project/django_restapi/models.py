@@ -26,6 +26,7 @@ class UserProfileManager(BaseUserManager):
 
         return user
 
+
 class UserProfile(AbstractBaseUser, PermissionsMixin):
     """ This class gonna be a User Profile for our system  """
 
@@ -47,3 +48,13 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+
+class ProfileFeedItem(models.Model):
+    # delete cascade means that if you delete the UserProfile for a user also the feed will be deleted
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    status_text = models.CharField(max_length=255)
+    created_on = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.status_text
