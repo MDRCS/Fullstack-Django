@@ -475,4 +475,120 @@
         path('blog/', include('blog.urls', namespace='blog')),
     ]
 
+    - Canonical URLs for models
+    A canonical URL is the preferred URL for a resource. You may have different pages in your site where you display posts, but there is a single URL that
+    you use as the main URL for a blog post. The convention in Django is to add a get_absolute_url() method to the model that returns the canonical URL for the object.
 
+    Edit the models.py file of the blog application and add the following code:
+
+    from django.urls import reverse
+    class Post(models.Model):
+        # ...
+        def get_absolute_url(self):
+            return reverse('blog:post_detail',
+                           args=[self.publish.year,
+                                 self.publish.month,
+                                 self.publish.day, self.slug])
+
+
+    You will use the get_absolute_url() method in your templates to link to specific posts.”
+
+    + Creating templates for your views
+    You have created views and URL patterns for the blog application. URL patterns map URLs to views, and views decide which data gets returned to the user.
+    Templates define how the data is displayed; they are usually written in HTML in combination with the Django template language.
+
+    Create the following directories and files inside your blog application directory:
+
+    templates/
+        blog/
+            base.html
+            post/
+                list.html
+                detail.html
+
+    Django has a powerful template language that allows you to specify how data is displayed. It is based on template tags, template variables, and template filters:
+
+    Template tags control the rendering of the template and look like {% tag %}
+    Template variables get replaced with values when the template is rendered and look like {{ variable }}
+    Template filters allow you to modify variables for display and look like {{ variable|filter }}.
+
+    {% load static %} tells Django to load the static template tags that are provided by the django.contrib.staticfiles application, which is contained in the INSTALLED_APPS setting.
+    After loading them, you are able to use the {% static %} template tag throughout this template. With this template tag, you can include the static files, such as the blog.css file
+
+    + python manage.py runserver
+    check http://127.0.0.1:8000/blog/ in the browser
+
+
+    for the post details :
+    + Take a look at the URL—it should be /blog/2020/1/1/who-was-django-reinhardt/. You have designed SEO-friendly URLs for your blog posts.”
+
+    + Adding pagination
+
+    When you start adding content to your blog, you might easily reach the point where tens or hundreds of posts are stored in your database. Instead of displaying all the posts on a single page, you may want to split the list of posts across several pages. This can be achieved through pagination. You can define the number of posts you want to be displayed per page and retrieve the posts that correspond to the page requested by the user. Django has a built-in pagination class that allows you to manage paginated data easily.
+    Edit the views.py file of the blog application to import the Django paginator classes and modify the post_list view, as follows:
+
+    This is how pagination works:
+
+    You instantiate the Paginator class with the number of objects that you want to display on each page.
+    You get the page GET parameter, which indicates the current page number.
+    You obtain the objects for the desired page by calling the page() method of Paginator.
+    If the page parameter is not an integer, you retrieve the first page of results. If this parameter is a number higher than the last page of results, you retrieve the last page.
+    You pass the page number and retrieved objects to the template.
+
+
+    Now you have to create a template to display the paginator so that it can be included in any template that uses pagination. In the templates/ folder of the blog application, create a new
+    file and name it pagination.html. Add the following HTML code to the file:
+
+    <div class="pagination">
+      <span class="step-links">
+        {% if page.has_previous %}
+          <a href="?page={{ page.previous_page_number }}">Previous</a>
+        {% endif %}
+        <span class="current">
+          Page {{ page.number }} of {{ page.paginator.num_pages }}.
+        </span>
+        {% if page.has_next %}
+          <a href="?page={{ page.next_page_number }}">Next</a>
+        {% endif %}
+      </span>
+    </div>
+
+    The pagination template expects a Page object in order to render the previous and next links, and to display the current page and total pages of results.
+    Let's return to the blog/post/list.html template and include the pagination.html template at the bottom of the {% content %} block, as follows:
+
+    {% block content %}
+      ...
+      {% include "pagination.html" with page=posts %}
+    {% endblock %}
+
+    “Edit the views.py file of your blog application and add the following code:
+
+    from django.views.generic import ListView
+    class PostListView(ListView):
+        queryset = Post.published.all()
+        context_object_name = 'posts'
+        paginate_by = 3
+        template_name = 'blog/post/list.html'
+    This class-based view is analogous to the previous post_list view. In the preceding code, you are telling ListView to do the following things:
+
+    Use a specific QuerySet instead of retrieving all objects. Instead of defining a queryset attribute, you could have specified model = Post and Django would have built the generic Post.objects.all() QuerySet for you.
+    Use the context variable posts for the query results. The default variable is object_list if you don't specify any context_object_name.
+    Paginate the result, displaying three objects per page.
+    Use a custom template to render the page. If you don't set a default template, ListView will use blog/post_list.html.
+    Now open the urls.py file of your blog application, comment the preceding post_list URL pattern, and add a new URL pattern using the PostListView class, as follows:
+
+    urlpatterns = [
+        # post views
+        # path('', views.post_list, name='post_list'),
+        path('', views.PostListView.as_view(), name='post_list'),
+        path('<int:year>/<int:month>/<int:day>/<slug:post>/',
+            views.post_detail,
+            name='post_detail'),
+    ]
+
+    In order to keep pagination working, you have to use the right page object that object that is passed to the template. Django's ListView generic view passes the selected page in a variable called `page_obj`,
+    so you have to edit your post/list.html template accordingly to include the paginator using the right variable, as follows:
+
+    {% include "pagination.html" with page=page_obj %}
+
+    + Open http://127.0.0.1:8000/blog/ in your browser and verify that everything works the same way as with the previous post_list view. This is a simple example of a class-based view that uses a generic class provided by Django.
