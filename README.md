@@ -96,3 +96,383 @@
     1- /profile create one
     2- login get the token and test all operations
 
+### + Django - The Easy Way :
+
+    - create a new django project
+    + django-admin startproject mysite . # create a skelton of a django project
+    + python manage.py runserver # run the project
+    + python manage.py makemigrations
+    + python manage.py startapp myapp
+
+    - Edit mysite app settings.py file and add myapp to the INSTALLED_APPS list:
+     INSTALLED_APPS = [
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'myapp', # < here
+        ]
+
+    9.3 Creating template files
+    Create index.html file in the myapp templates folder. You have to create the templates and myapp folders too:
+
+        Folder structure for templates
+        ├── 09-Hello-World
+        │   ├── db.sqlite3
+        │   ├── manage.py
+        │   ├── myapp
+        │   │   ├── templates <-- here
+        │   │   │   └── myapp <-- here
+        │   │   │       └── index.html <-- here”
+
+    9.4 Creating views
+    Edit myapp app views.py file and add an index function:
+
+    -> myapp/views.py
+
+    from django.shortcuts import render
+
+    def index(request): # < here
+        return render(request, 'myapp/index.html')
+
+    Edit mysite app urls.py file add the index path to the urlpatterns list:
+
+    -> mysite/urls.py
+
+    from django.contrib import admin
+    from django.urls import path
+
+    from myapp import views as myapp_views # < here
+
+    urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('', myapp_views.index, name='index'), # < here
+    ]
+
+    + python manage.py runserver
+
+    For example the default database configuration looks like this:
+
+        -> mysite/settings.py
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            }
+        }
+
+        This allows you to start working with a database immediately.
+
+        - For PostgreSQL database we would do something like this:
+
+        PostgreSQL configuration example
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                'NAME': 'mysitedb',
+                'USER': 'username',
+                'PASSWORD': 'password',
+                'HOST': 'localhost',
+                'PORT': '',
+            }
+        }”
+
+
+### + Building a Blog Application
+
+    This chapter will cover the following topics:
+
+    Installing Django
+    Creating and configuring a Django project
+    Creating a Django application
+    Designing models and generating model migrations
+    Creating an administration site for your models
+    Working with QuerySets and managers
+    Building views, templates, and URLs
+    Adding pagination to list views
+    Using Django's class-based views
+
+
+    create new project :
+
+    - django-admin startproject mysite
+    - cd mysite
+    - python manage.py migrate
+
+    ++ Remember that this server is only intended for development and is not suitable for production use. In order to deploy
+       Django in a production environment, you should run it as a WSGI application using a web server, such as Apache,
+       Gunicorn, or uWSGI, or as an ASGI application using a server like Uvicorn or Daphne. You can find more information
+       on how to deploy Django with different web servers at https://docs.djangoproject.com/en/3.0/howto/deployment/wsgi/.
+
+    - settings.py
+    The following settings are worth looking at:
+
+    + DEBUG is a Boolean that turns the debug mode of the project on and off. If it is set to True, Django will display detailed error pages when an uncaught
+    exception is thrown by your application. When you move to a production environment, remember that you have to set it to False. Never deploy a site into
+    production with DEBUG turned on because you will expose sensitive project-related data.
+
+    + ALLOWED_HOSTS is not applied while debug mode is on or when the tests are run. Once you move your site to production and set DEBUG to False, you will
+      have to add your domain/host to this setting in order to allow it to serve your Django site.
+
+    + INSTALLED_APPS is a setting you will have to edit for all projects. This setting tells Django which applications are active for this site.
+
+
+    - Creating an application
+    Now let's create your first Django application. You will create a blog application from scratch. From the project's root directory, run the following command:
+
+    + python manage.py startapp blog
+
+    - When you create a model, Django will provide you with a practical API to query objects in the database easily.”
+
+    - models.py
+    - describing  model `Post` is fields :
+
+    slug: This is a field intended to be used in URLs. A slug is a short label that contains only letters,
+          numbers, underscores, or hyphens. You will use the slug field to build beautiful, SEO-friendly URLs
+          for your blog posts. You have added the unique_for_date parameter to this field so that you can build
+          URLs for posts using their publish date and slug. Django will prevent multiple posts from having
+          the same slug for a given date.
+
+    author: This field defines a many-to-one relationship, meaning that each post is written by a user, and a user
+            can write any number of posts. For this field, Django will create a foreign key in the database using the primary
+            key of the related model. In this case, you are relying on the User model of the Django authentication system.
+            The on_delete parameter specifies the behavior to adopt when the referenced object is deleted. This is not specific
+            to Django; it is an SQL standard. Using CASCADE, you specify that when the referenced user is deleted, the database
+            will also delete all related blog posts. You can take a look at all the possible options
+            at https://docs.djangoproject.com/en/3.0/ref/models/fields/#django.db.models.ForeignKey.on_delete.
+            You specify the name of the reverse relationship, from User to Post, with the related_name attribute.
+            This will allow you to access related objects easily.
+
+    created: This datetime indicates when the post was created. Since you are using auto_now_add here, the date will be saved automatically when creating an object.
+    updated: This datetime indicates the last time the post was updated. Since you are using auto_now here, the date will be updated automatically when saving an object.
+    status: This field shows the status of a post. You use a choices parameter, so the value of this field can only be set to one of the given choices.”
+
+    The Meta class inside the model contains metadata. You tell Django to sort results by the publish field in descending order by default when you query the database.
+    You specify the descending order using the negative prefix. By doing this, posts published recently will appear first.
+
+    Activating the application
+    In order for Django to keep track of your application and be able to create database tables for its models, you have to activate it. To do this, edit the settings.py
+    file and add blog.apps.BlogConfig to the INSTALLED_APPS setting.
+
+    The BlogConfig class is your application configuration. Now Django knows that your application is active for this project and will be able to load its models.
+
+    Creating and applying migrations
+    Now that you have a data model for your blog posts, you will need a database table for it. Django comes with a migration system that tracks the changes made to models
+    and enables them to propagate into the database. As mentioned, the migrate command applies migrations for all applications listed in INSTALLED_APPS; it synchronizes
+    the database with the current models and existing migrations.
+
+    + python manage.py makemigrations blog
+
+    - Let's take a look at the SQL code that Django will execute in the database to create the table for your model. The sqlmigrate command takes the migration names and returns
+      their SQL without executing it.
+
+    + python manage.py sqlmigrate blog 0001
+
+    - The exact output depends on the database you are using. The preceding output is generated for SQLite. As you can see in the output, Django generates the table names by combining
+      the application name and the lowercase name of the model (blog_post), but you can also specify a custom database name for your model in the Meta class of the model using the db_table attribute.
+
+    + python manage.py migrate
+
+    - Creating an administration site for models
+    Now that you have defined the Post model, you will create a simple administration site to manage your blog posts. Django comes with a built-in administration interface that is very useful for editing content.
+
+    - Creating a superuser :
+    + python manage.py createsuperuser
+
+    Adding models to the administration site
+    Let's add your blog models to the administration site. Edit the admin.py file of the blog application and make it look like this:
+
+    from django.contrib import admin
+    from .models import Post
+    admin.site.register(Post)
+
+    Adding models to the administration site
+    Let's add your blog models to the administration site. Edit the admin.py file of the blog application and make it look like this:
+
+    from django.contrib import admin
+    from .models import Post
+    admin.site.register(Post)
+
+    Customizing the way that models are displayed
+    Now, we will take a look at how to customize the administration site. Edit the admin.py file of your blog application and change it, as follows:
+
+    from django.contrib import admin
+    from .models import Post
+
+    @admin.register(Post)
+    class PostAdmin(admin.ModelAdmin):
+        list_display = ('title', 'slug', 'author', 'publish', 'status')
+
+    You are telling the Django administration site that your model is registered in the site using a custom class that inherits from”
+
+    ModelAdmin. In this class, you can include information about how to display the model in the site and how to interact with it.
+
+    The list_display attribute allows you to set the fields of your model that you want to display on the administration object list page. The @admin.register() decorator performs the same function as the admin.site.register() function that you replaced, registering the ModelAdmin class that it decorates.
+
+    Let's customize the admin model with some more options, using the following code:
+
+    @admin.register(Post)
+    class PostAdmin(admin.ModelAdmin):
+        list_display = ('title', 'slug', 'author', 'publish', 'status')
+        list_filter = ('status', 'created', 'publish', 'author')
+        search_fields = ('title', 'body')
+        prepopulated_fields = {'slug': ('title',)}
+        raw_id_fields = ('author',)
+        date_hierarchy = 'publish'
+        ordering = ('status', 'publish')
+
++ this is the result of our Custom admin panel :
+
+![](./static/custom_admin_panel.png)
+
+    You can see that the fields displayed on the post list page are the ones you specified in the list_display attribute. The list page now includes a right sidebar that allows you to filter the results by the fields included in the list_filter attribute.
+    A search bar has appeared on the page. This is because you have defined a list of searchable fields using the search_fields attribute. Just below the search bar, there are navigation links to navigate through a date hierarchy; this has been defined by the date_hierarchy attribute.
+    You can also see that the posts are ordered by STATUS and PUBLISH columns by default. You have specified the default sorting criteria using the ordering attribute.
+    Next, click on the ADD POST link. You will also note some changes here. As you type the title of a new post, the slug field is filled in automatically. You have told Django to prepopulate
+
+    the slug field with the input of the title field using the prepopulated_fields attribute.
+    Also, the author field is now displayed with a lookup widget that can scale much better than a drop-down select input when you have thousands of users. This is achieved with the raw_id_fields attribute and it looks like this:
+
+    - Working with QuerySets and managers
+
+    The Django ORM is based on QuerySets. A QuerySet is a collection of database queries to retrieve objects from your database. You can apply filters to QuerySets to narrow down the query results based on given parameters.
+
+    Creating objects
+    Open the terminal and run the following command to open the Python shell:
+
+    + python manage.py shell
+
+    Then, type the following lines:
+
+    >>> from django.contrib.auth.models import User
+    >>> from blog.models import Post
+    >>> user = User.objects.get(username='mdrahali')
+    >>> post = Post(title='Another post',
+    ...             slug='another-post',
+    ...             body='Post body.',
+    ...             author=user)
+    ... post.save()
+
+    The preceding action performs an INSERT SQL statement behind the scenes. You have seen how to create an object
+    in memory first and then persist it to the database, but you can also create the object and persist it into the
+    database in a single operation using the create() method, as follows:
+
+    Post.objects.create(title='One more post',
+                        slug='one-more-post',
+                        body='Post body.',
+                        author=user)
+    Updating objects
+    Now, change the title of the post to something different and save the object again:
+
+    >>> post.title = 'New title'
+    >>> post.save()
+    This time, the save() method performs an UPDATE SQL statement.
+
+    >>> all_posts = Post.objects.all()
+    This is how you create a QuerySet that returns all objects in the database. Note that this QuerySet has not been executed yet.
+    Django QuerySets are lazy, which means they are only evaluated when they are forced to be. This behavior makes QuerySets very
+    efficient. If you don't set the QuerySet to a variable, but instead write it directly on the Python shell, the SQL statement
+    of the QuerySet is executed because you force it to output results:
+
+    >>> all_posts
+
+    Using the filter() method
+
+    To filter a QuerySet, you can use the filter() method of the manager. For example, you can retrieve all posts published in the year 2020 using the following QuerySet:
+
+    >>> Post.objects.filter(publish__year=2020)
+    You can also filter by multiple fields. For example, you can retrieve all posts published in 2020 by the author with the username admin:
+
+    >>> Post.objects.filter(publish__year=2020, author__username='admin')
+
+    Using exclude()
+
+    You can exclude certain results from your QuerySet using the exclude() method of the manager. For example, you can retrieve all posts published in 2020 whose titles don't start with Why:
+
+    >>> Post.objects.filter(publish__year=2020) \
+    >>>             .exclude(title__startswith='Why')
+
+    Using order_by()
+
+    You can order results by different fields using the order_by() method of the manager. For example, you can retrieve all objects ordered by their title, as follows:
+
+    >>> Post.objects.order_by('title')
+    Ascending order is implied. You can indicate descending order with a negative sign prefix, like this:
+
+    >>> Post.objects.order_by('-title')
+    Deleting objects
+    If you want to delete an object, you can do it from the object instance using the delete() method:
+
+    >>> post = Post.objects.get(id=1)
+    >>> post.delete()
+    Note that deleting objects will also delete any dependent relationships for ForeignKey objects defined with on_delete set to CASCADE.
+
+
+    - Creating model managers
+    As I previously mentioned, objects is the default manager of every model that retrieves all objects in the database. However, you can also define custom managers
+    for your models. You will create a custom manager to retrieve all posts with the published status.
+    There are two ways to add or customize managers for your models: you can add extra manager methods to an existing manager,
+    or create a new manager by modifying the initial QuerySet that the manager returns. The first method provides you with a QuerySet
+    API such as Post.objects.my_manager(), and the latter provides you with Post.my_manager.all(). The manager will allow you to
+    retrieve posts using Post.published.all().
+
+    The get_queryset() method of a manager returns the QuerySet that will be executed. You override this method to include your custom filter in the final QuerySet.
+
+    - test it :
+    + python manage.py shell
+
+    >>> from blog.models import Post
+    >>> Post.published.filter(title__startswith='Another')
+
+    - Building list and detail views
+    A Django view is just a Python function that receives a web request and returns
+
+    a web response. All the logic to return the desired response goes inside the view.
+    First, you will create your application views, then you will define a URL pattern for each view, and finally, you will create HTML templates to render the data generated by the views. Each view will render a template, passing variables to it, and will return an HTTP response with the rendered output.”
+
+    Creating list and detail views
+    Let's start by creating a view to display the list of posts. Edit the views.py file of your blog application and make it look like this:
+
+    from django.shortcuts import render, get_object_or_404
+    from .models import Post
+    def post_list(request):
+        posts = Post.published.all()
+        return render(request,
+                     'blog/post/list.html',
+                     {'posts': posts})
+
+    You just created your first Django view. The post_list view takes the request object as the only parameter. This parameter is required by all views. In this view, you retrieve all the posts with the published status using the published manager that you created previously
+
+    AAdding URL patterns for your views
+    URL patterns allow you to map URLs to views. A URL pattern is composed of a string pattern, a view, and, optionally, a name that allows you to name the URL project-wide. Django runs through each URL pattern and stops at the first one that matches the requested URL. Then,
+    Django imports the view of the matching URL pattern and executes it,
+
+    Create a urls.py file in the directory of the blog application and add the following lines to it:
+
+    from django.urls import path
+    from . import views
+    app_name = 'blog'
+    urlpatterns = [
+        # post views
+        path('', views.post_list, name='post_list'),
+        path('<int:year>/<int:month>/<int:day>/<slug:post>/',
+             views.post_detail,
+             name='post_detail'),
+    ]
+
+    - In the preceding code, you define an application namespace with the app_name variable. This allows you to organize URLs by application and use the name when referring to them. You define two different patterns using the path() function.
+
+    Next, you have to include the URL patterns of the blog application in the main URL patterns of the project.
+
+    Edit the urls.py file located in the mysite directory of your project and make it look like the following:
+
+    from django.urls import path, include
+    from django.contrib import admin
+    urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('blog/', include('blog.urls', namespace='blog')),
+    ]
+
+
