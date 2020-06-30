@@ -1,2 +1,2 @@
-djang
+django
 djangorestframework==3.9.2
