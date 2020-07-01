@@ -592,3 +592,52 @@
     {% include "pagination.html" with page=page_obj %}
 
     + Open http://127.0.0.1:8000/blog/ in your browser and verify that everything works the same way as with the previous post_list view. This is a simple example of a class-based view that uses a generic class provided by Django.
+
+    Enhancing Your Blog with Advanced Features
+
+    - Features that i am going to implement are :
+
+    - Sharing posts via email: When readers like an article, they might want to share it with somebody else. You will implement the functionality to share posts via email.
+    - Adding comments to a post: Many people want to allow their audience to comment on posts and create discussions. You will let your readers add comments to your blog posts.
+    - Tagging posts: Tags allow you to categorize content in a non-hierarchical manner, using simple keywords. You will implement a tagging system, which is a very popular feature for blogs.
+    - Recommending similar posts: Once you have a classification method in place, such as a tagging system, you can use it to provide content recommendations to your readers. You will build a
+      system that recommends other posts that share tags with a certain blog post.
+    - These functionalities will turn your application into a fully featured blog.
+
+    + Sharing posts by email Create a form for users to fill in their name, their email, the email recipient, and optional comments
+    + Create a view in the views.py file that handles the posted data and sends the email
+    + Add a URL pattern for the new view in the urls.py file of the blog application
+    + Create a template to display the form
+
+
+    + Creating forms with Django
+    Let's start by building the form to share posts. Django has a built-in forms framework that allows you to create forms in an easy manner. The forms framework makes it simple to define the fields of your form, specify how they have to be displayed, and indicate how they have to validate input data. The Django forms framework offers a flexible way to render forms and handle data.
+
+    Django comes with two base classes to build forms:
+
+    Form: Allows you to build standard forms
+    ModelForm: Allows you to build forms tied to model instances
+    First, create a forms.py file inside the directory of your blog application and make it look like this:
+
+    from django import forms
+
+    class EmailPostForm(forms.Form):
+        name = forms.CharField(max_length=25)
+        email = forms.EmailField()
+        to = forms.EmailField()
+        comments = forms.CharField(required=False, widget=forms.Textarea)
+
+    NOTE: Forms can reside anywhere in your Django project. The convention is to place them inside a forms.py file for each application.
+
+    - The name field is CharField. This type of field is rendered as an <input type="text"> HTML element. Each field type has a default widget that determines how the field is rendered in HTML.
+      The default widget can be overridden with the widget attribute. In the comments field, you use a Textarea widget to display it as a <textarea> HTML element instead of the default <input> element.
+
+    - Field validation also depends on the field type. For example, the email and to fields are EmailField fields. Both fields require a valid email address; the field validation will otherwise raise a
+      forms.ValidationError exception and the form will not validate. Other parameters are also taken into account for form validation: you define a maximum length of 25 characters for the name field
+      and make the comments field optional with required=False. All of this is also taken into account for field validation.
+
+
+
+
+
+
