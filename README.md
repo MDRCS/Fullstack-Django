@@ -742,5 +742,57 @@
 
     You enumerate comments with the {{ forloop.counter }} variable, which contains the loop counter in each iteration. Then, you display the name of the user who posted the comment, the date, and the body of the comment.
 
+    Adding the tagging functionality
+
+    After implementing your comment system, you need to create a way to tag your posts. You will do this by integrating a third-party Django tagging application into your project. django-taggit is a reusable application that primarily
+    offers you a Tag model and a manager to easily add tags to any model.
+
+    “First, you need to install django-taggit via pip by running the following command:
+
+    pip install django_taggit==1.2.0
+    Then, open the settings.py file of the mysite project and add taggit to your INSTALLED_APPS setting, as follows:
+
+    INSTALLED_APPS = [
+        # ...
+        'blog.apps.BlogConfig',
+        'taggit',
+    ]
+
+    Open the models.py file of your blog application and add the TaggableManager manager provided by django-taggit to the Post model using the following code:
+
+    from taggit.managers import TaggableManager
+    class Post(models.Model):
+        # ...
+        tags = TaggableManager()
+
+    The tags manager will allow you to add, retrieve, and remove tags from Post objects.
+
+    Run the following command to create a migration for your model changes:
+
+    $ python manage.py makemigrations blog
+
+    You should get the following output:
+
+    Migrations for 'blog':
+      blog/migrations/0003_post_tags.py
+        - Add field tags to post
+    Now, run the following command to create the required database tables for django-taggit models and to synchronize your model changes:
+
+    $ python manage.py migrate
+
+    “Let's explore how to use the tags manager. Open the terminal with the python manage.py shell command and enter the following code. First, you will retrieve one of your posts (the one with the 1 ID):
+
+    >>> from blog.models import Post
+    >>> post = Post.objects.get(id=1)
+    “Then, add some tags to it and retrieve its tags to check whether they were successfully added:
+
+    >>> post.tags.add('music', 'jazz', 'django')
+    >>> post.tags.all()
+
+    >>> post.tags.remove('django')
+    >>> post.tags.all()
+
+    Now, you need to edit your blog posts to display tags. Open the blog/post/list.html template and add the following HTML code below the post title:
+    <p class="tags">Tags: {{ post.tags.all|join:", " }}</p>
 
 
