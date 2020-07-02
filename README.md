@@ -795,4 +795,37 @@
     Now, you need to edit your blog posts to display tags. Open the blog/post/list.html template and add the following HTML code below the post title:
     <p class="tags">Tags: {{ post.tags.all|join:", " }}</p>
 
+    Retrieving posts by similarity
+
+    Now that you have implemented tagging for your blog posts, you can do many interesting things with tags. Tags allow you to categorize posts in a non-hierarchical manner.
+    Posts about similar topics will have several tags in common. You will build a functionality to display similar posts by the number of tags they share. In this way, when a user
+    reads a post, you can suggest to them that they read other related posts.
+    In order to retrieve similar posts for a specific post, you need to perform the following steps:
+
+    1- Retrieve all tags for the current post
+    2- Get all posts that are tagged with any of those tags
+    3- Exclude the current post from that list to avoid recommending the same post
+    4- Order the results by the number of tags shared with the current post
+    5- In the case of two or more posts with the same number of tags, recommend the most recent post
+    6- Limit the query to the number of posts you want to recommend
+
+    Add the following lines inside the post_detail view before the render() function, with the same indentation level:
+
+    # List of similar posts
+    post_tags_ids = post.tags.values_list('id', flat=True)
+    similar_posts = Post.published.filter(tags__in=post_tags_ids)\
+                                  .exclude(id=post.id)
+    similar_posts = similar_posts.annotate(same_tags=Count('tags'))\
+                                .order_by('-same_tags','-publish')[:4]
+
+    The preceding code is as follows:
+
+    You retrieve a Python list of IDs for the tags of the current post. The values_list() QuerySet returns tuples with the values for the given fields.
+    You pass flat=True to it to get single values such as [1, 2, 3, ...] instead of one-tuples such as [(1,), (2,), (3,) ...].
+    You get all posts that contain any of these tags, excluding the current post itself.
+    You use the Count aggregation function to generate a calculated field—same_tags—that contains the number of tags shared with all the tags queried.
+    You order the result by the number of shared tags (descending order) and by publish to display recent posts first for the posts with the same number of shared tags.
+    You slice the result to retrieve only the first four posts.
+
+
 

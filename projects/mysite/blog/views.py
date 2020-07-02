@@ -5,6 +5,7 @@ from django.core.mail import send_mail
 from django.views.generic import ListView
 from .forms import EmailPostForm, CommentForm
 from taggit.models import Tag
+from django.db.models import Count
 
 # class PostListView(ListView):
 #     """ class based view """
@@ -41,6 +42,9 @@ def post_list(request, tag_slug=None):
 
 def post_detail(request, year, month, day, post):
     post = get_object_or_404(models.Post, slug=post, publish__year=year, publish__month=month, publish__day=day)
+    post_tags_ids = post.tags.values_list('id', flat=True)
+    similar_posts = models.Post.published.filter(tags__in=post_tags_ids).exclude(id=post.id)
+    similar_posts = similar_posts.annotate(same_tags=Count('tags')).order_by('-same_tags', '-publish')[:4]
     # comments is the relative_name of the relationship between Post and Comment
     # list active comments for this post
     comments = post.comments.filter(active=True)
@@ -55,7 +59,7 @@ def post_detail(request, year, month, day, post):
     else:
         comment_form = CommentForm()
 
-    return render(request, 'blog/post/detail.html', {'post': post, 'comments': comments, 'new_comment': new_comment, 'comment_form': comment_form})
+    return render(request, 'blog/post/detail.html', {'post': post, 'comments': comments, 'new_comment': new_comment, 'comment_form': comment_form, 'similar_posts': similar_posts})
 
 
 def post_share(request, post_id):
