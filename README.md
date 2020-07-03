@@ -920,4 +920,79 @@
 
     - after adding url_pattern and view and model -> go check http://127.0.0.1:8000/sitemaps.xml
 
+    Adding full-text search to your blog
+    Next, you will add search capabilities to your blog. Searching for data in the database with user input is a common task for web applications. The Django ORM allows you to perform simple matching operations using, for example, the contains filter (or its case-insensitive version, icontains). You can use the following query to find posts that contain the word framework in their body:
+
+    from blog.models import Post
+    Post.objects.filter(body__contains='framework')
+
+    You also need to install the psycopg2 PostgreSQL adapter for Python. Run the following command in the shell to install it:
+
+    pip install psycopg2-binary==2.8.4
+    Let's create a user for your PostgreSQL database. Open the shell and run the following commands:
+
+    psql postgres
+    CREATE USER blog WITH ENCRYPTED PASSWORD 'yourpass';
+    You will be prompted for a password for the new user. Enter the desired password and then create the blog database and give ownership to the blog user you just created with the following command:
+
+    CREATE DATABASE blog ENCODING 'UTF8' OWNER=blog;
+
+    - because we user a new database we should create a new superuser :
+    + create a superuser :
+
+    $ python manage.py createsuperuser
+
+    Now you can search against a single field using the search QuerySet lookup, like this:
+
+    from blog.models import Post
+    Post.objects.filter(body__search='django')
+    This query uses PostgreSQL to create a search vector for the body field and a search query from the term django. Results are obtained by matching the query with the vector.
+
+    Searching against multiple fields
+    You might want to search against multiple fields. In this case, you will need to define a SearchVector object. Let's build a vector that allows you to search against the title and body fields of the Post model:
+
+    from django.contrib.postgres.search import SearchVector
+    from blog.models import Post
+    Post.objects.annotate(
+        search=SearchVector('title', 'body'),
+    ).filter(search='django')
+
+    + Stemming and ranking results :
+
+    Stemming is the process of reducing words to their word stem, base, or root form. Stemming is used by search engines to reduce indexed words to their stem, and to be able to match inflected or derived words.
+    For example, "music" and "musician" can be considered similar words by a search engine.
+    Django provides a SearchQuery class to translate terms into a search query object. By default, the terms are passed through stemming algorithms, which helps you to obtain better matches. You also want to order
+    results by relevancy. PostgreSQL provides a ranking function that orders results based on how often the query terms appear and how close together they are.
+
+    Weighting queries
+    You can boost specific vectors so that more weight is attributed to them when ordering results by relevancy. For example, you can use this to give more relevance to posts that are matched by title rather than by content.
+
+    Edit the previous lines of the views.py file of your blog application and make them look like this:
+
+    search_vector = SearchVector('title', weight='A') + \
+                    SearchVector('body', weight='B')
+    search_query = SearchQuery(query)
+    results = Post.published.annotate(
+     rank=SearchRank(search_vector, search_query)
+     ).filter(rank__gte=0.3).order_by('-rank')
+    In the preceding code, you apply different weights to the search vectors built using the title and body fields. The default weights are D, C, B, and A, and they refer to the numbers 0.1, 0.2, 0.4, and 1.0, respectively. You apply a weight of 1.0 to the title search vector and a weight of 0.4 to the body vector. Title matches will prevail over body content matches. You filter the results to display only the ones with a rank higher than 0.3.
+
+    Searching with trigram similarity
+    Another search approach is trigram similarity. A trigram is a group of three consecutive characters. You can measure the similarity of two strings by counting the number of trigrams that they share. This approach turns out to be very effective for measuring the similarity of words in many languages.
+
+    In order to use trigrams in PostgreSQL, you will need to install the pg_trgm extension first. Execute the following command from the shell to connect to your database:
+
+    psql blog
+    Then, execute the following command to install the pg_trgm extension:
+
+    CREATE EXTENSION pg_trgm;
+    Let's edit your view and modify it to search for trigrams. Edit the views.py file of your blog application and add the following import:
+
+    from django.contrib.postgres.search import TrigramSimilarity
+    Then, replace the Post search query with the following lines:
+
+    results = Post.published.annotate(
+        similarity=TrigramSimilarity('title', query),
+    ).filter(similarity__gt=0.1).order_by('-similarity')
+
 
