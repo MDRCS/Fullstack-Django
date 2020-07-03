@@ -899,3 +899,25 @@
     And a [link to the Django website](https://www.djangoproject.com/)
 
 
+    Adding a sitemap to your site
+    Django comes with a sitemap framework, which allows you to generate sitemaps for your site dynamically.
+    A sitemap is an XML file that tells search engines the pages of your website, their relevance, and how
+    frequently they are updated. Using a sitemap will make your site more visible in search engine rankings:
+    sitemaps help crawlers to index your website's content.
+
+    Edit the settings.py file of your project and add django.contrib.sites and django.contrib.sitemaps to the INSTALLED_APPS setting. Also, define a new setting for the site ID, as follows:
+
+    SITE_ID = 1
+    # Application definition
+    INSTALLED_APPS = [
+        # ...
+        'django.contrib.sites',
+        'django.contrib.sitemaps',
+    ]
+
+    Now run the following command to create the tables of the Django site application in the database:
+    python manage.py migrate
+
+    - after adding url_pattern and view and model -> go check http://127.0.0.1:8000/sitemaps.xml
+
+
