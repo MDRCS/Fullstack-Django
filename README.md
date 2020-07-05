@@ -1197,3 +1197,5 @@
 
     python manage.py runserver_plus --cert-file cert.crt
     Open https://127.0.0.1:8000/account/ in your browser.
+
+    pip install easy-thumbnails==2.7
