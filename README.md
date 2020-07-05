@@ -995,4 +995,158 @@
         similarity=TrigramSimilarity('title', query),
     ).filter(similarity__gt=0.1).order_by('-similarity')
 
+### + Building a Social Network Website
+
+    This chapter will cover the following topics:
+
+    $ Using the Django authentication framework
+    $ Creating user registration views
+    $ Extending the user model with a custom profile model
+    $ Adding social authentication with Python Social Auth
+
+    Creating a social website project
+    You are going to create a social application that will allow users to share images that they find on the Internet.
+    You will need to build the following elements for this project:
+
+    An authentication system for users to register, log in, edit their profile, and change or reset their password
+    A follow system to allow users to follow each other on the website
+    A functionality to display shared images and implement a bookmarklet for users to share images from any website
+    An activity stream that allows users to see the content uploaded by the people that they follow
+
+    “Starting your social website project
+    Open the terminal and use the following commands to create a virtual environment for your project and activate it:
+
+    mkdir env
+    python3 -m venv env/bookmarks
+    source env/bookmarks/bin/activate
+
+    The shell prompt will display your active virtual environment, as follows:
+
+    (bookmarks)laptop:~ zenx$
+    Install Django in your virtual environment with the following command:
+
+    pip install Django==3.0.*
+    Run the following command to create a new project:
+
+    django-admin startproject bookmarks
+    The initial project structure has been created. Use the following commands to get into your project directory and create a new application named account:
+
+    cd bookmarks/
+    django-admin startapp account
+    Remember that you should add the new application to your project by adding the application's name to the INSTALLED_APPS setting in the settings.py file. Place it in the INSTALLED_APPS list before any of the other installed apps:
+
+    INSTALLED_APPS = [
+        'account.apps.AccountConfig',
+        # ...
+    ]
+
+    python manage.py migrate
+
+    - Django comes with a built-in authentication framework that can handle user authentication, sessions, permissions, and user groups. The authentication system includes views for common user actions such as log in, log out, password change, and password reset.
+
+    The authentication framework also includes the following models:
+
+    User: A user model with basic fields; the main fields of this model are username, password, email, first_name, last_name, and is_active
+    Group: A group model to categorize users
+    Permission: Flags for users or groups to perform certain actions.
+
+    Django includes several forms and views in the authentication framework that you can use right away. The login view you have created is a good exercise to understand the process of user authentication in Django.
+    However, you can use the default Django authentication views in most cases.
+
+    Django provides the following class-based views to deal with authentication. All of them are located in django.contrib.auth.views:
+
+    LoginView: Handles a login form and logs in a user
+    LogoutView: Logs out a user
+    Django provides the following views to handle password changes:
+
+    PasswordChangeView: Handles a form to change the user's password
+    PasswordChangeDoneView: The success view that the user is redirected to after a successful password change
+    Django also includes the following views to enable users to reset their password:
+
+    PasswordResetView: Allows users to reset their password. It generates a one-time-use link with a token and sends it to a user's email account.
+    PasswordResetDoneView: Tells users that an email—including a link to reset their password—has been sent to them.
+    PasswordResetConfirmView: Allows users to set a new password.
+    PasswordResetCompleteView: The success view that the user is redirected to after successfully resetting their password.
+
+    Edit the settings.py file of your project and add the following code to it:
+
+    LOGIN_REDIRECT_URL = 'dashboard'
+    LOGIN_URL = 'login'
+    LOGOUT_URL = 'logout'
+    The settings defined in the preceding code are as follows:
+
+    LOGIN_REDIRECT_URL: Tells Django which URL to redirect the user to after a successful login if no next parameter is present in the request
+    LOGIN_URL: The URL to redirect the user to log in (for example, views using the login_required decorator)
+    LOGOUT_URL: The URL to redirect the user to log out
+
+    You are using the names of the URL patterns that you previously defined using the name attribute of the path() function. Hardcoded URLs instead of URL names can also be used for these settings.”
+
+    try to login using this url -> after login you will be redirected to account html pages and not admin ones.
+    http://127.0.0.1:8000/account/login/?next=/account/
+
+    social network platform login :
+
+    Several social services will not allow redirecting users to 127.0.0.1 or localhost after a successful authentication; they expect a domain name. In order to make social authentication work, you will need a domain. To fix this on Linux or macOS, edit your /etc/hosts file and add the following line to it:
+
+    $ sudo vi /etc/hosts
+    $ add this line -> 127.0.0.1 mysite.com
+
+    Edit the settings.py file of your project and edit the ALLOWED_HOSTS setting as follows:
+
+    ALLOWED_HOSTS = ['mysite.com', 'localhost', '127.0.0.1']
+    Besides the mysite.com host, you explicitly include localhost and 127.0.0.1. This is in order to be able to access the site through localhost, which is the default Django behavior when DEBUG is True and ALLOWED_HOSTS is empty. Now you should be able to open http://mysite.com:8000/account/login/ in your browser.”
+
+    Running the development server through HTTPS
+    Some of the social authentication methods you are going to use require an HTTPS connection. The Transport Layer Security (TLS) protocol is the standard for serving websites through a secure connection. The TLS predecessor is the Secure Sockets Layer (SSL).
+    Although SSL is now deprecated, in multiple libraries and online documentation you will find references to both the terms TLS and SSL. The Django development server is not able to serve your site through HTTPS, since that is not its intended use. In ”
+
+    order to test the social authentication functionality serving your site through HTTPS, you are going to use the RunServerPlus extension of the package Django Extensions. Django Extensions is a third-party collection of custom extensions for Django. Please note that this is never the method you should use to serve your site in a real environment; this is a development server.
+
+    Use the following command to install Django Extensions:
+
+    pip install django-extensions==2.2.5
+    Now you need to install Werkzeug, which contains a debugger layer required by the RunServerPlus extension. Use the following command to install it:
+
+    pip install werkzeug==0.16.0
+    Finally, use the following command to install pyOpenSSL, which is required to use the SSL/TLS functionality of RunServerPlus:
+
+    pip install pyOpenSSL==19.0.0
+    Edit the settings.py file of your project and add Django Extensions to the INSTALLED_APPS setting, as follows:
+
+    INSTALLED_APPS = [
+        # ...
+        'django_extensions',
+    ]
+    Use the management command runserver_plus provided by Django Extensions to run the development server, as follows:
+
+    python manage.py runserver_plus --cert-file cert.crt
+    You provide a file name to the runserver_plus command for the SSL/TLS certificate. Django Extensions will generate a key and certificate automatically.
+
+    Open https://mysite.com:8000/account/login/ in your browser. Now you[…]”
+
+    pip install social-auth-app-django
+    pip install django-extensions==2.2.5
+    pip install werkzeug==0.16.0
+    pip install pyOpenSSL==19.0.0
+    pip install Pillow
+
+![](./social-logins/fb-1.png)
+![](./social-logins/fb-2.png)
+![](./social-logins/fb-3.png)
+![](./social-logins/fb-4.png)
+![](./social-logins/fb-5.png)
+![](./social-logins/twitter-1.png)
+![](./social-logins/twitter-2.png)
+![](./social-logins/twitter-3.png)
+![](./social-logins/twitter-4.png)
+![](./social-logins/google-1.png)
+![](./social-logins/google-2.png)
+![](./social-logins/google-3.png)
+![](./social-logins/google-4.png)
+![](./social-logins/google-5.png)
+![](./social-logins/google-6.png)
+
+    # run the server using a certificate ssl self-generated :
+    python manage.py runserver_plus --cert-file cert.crt
+
 
