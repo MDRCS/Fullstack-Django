@@ -28,7 +28,7 @@ class ImageCreateForm(forms.ModelForm):
         extension = image_url.rsplit('.', 1)[1].lower()
         image_name = f'{name}.{extension}'
         response = request.urlopen(image_url)
-        image.image.save(image_name, response.read(), save=False)
+        image.image.save(image_name, ContentFile(response.read()), save=False)
         if commit:
             image.save()
         return image

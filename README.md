@@ -1182,4 +1182,18 @@
     pip install --upgrade certifi
 
 
+    https://127.0.0.1:8000/images/create/?title=%20Django%20and%20Duke&url=https://upload.wikimedia.org/wikipedia/commons/8/85/Django_Reinhardt_and_Duke_Ellington_%28Gottlieb%29.jpg
 
+    + Building a bookmarklet with jQuery
+
+    - This is how your users will add a bookmarklet to their browser and use it:
+
+    The user drags a link from your site to their browser's bookmarks. The link contains JavaScript code in its href attribute. This code will be stored in the bookmark.
+    The user navigates to any website and clicks on the bookmark. The JavaScript code of the bookmark is executed.”
+
+    For security reasons, your browser will prevent you from running the bookmarklet over HTTP on a site served through HTTPS. You will need to be able to load the bookmarklet on any site, including sites secured through HTTPS. To run your development server using an auto-generated SSL/TLS certificate, you will use RunServerPlus from Django Extensions, which you installed in the previous chapter.
+
+    Run the RunServerPlus development server with the following command:
+
+    python manage.py runserver_plus --cert-file cert.crt
+    Open https://127.0.0.1:8000/account/ in your browser.
