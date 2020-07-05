@@ -1149,4 +1149,37 @@
     # run the server using a certificate ssl self-generated :
     python manage.py runserver_plus --cert-file cert.crt
 
+    - Sharing Content on Your Website :
+
+    Creating an image bookmarking website
+
+    In this chapter, you will learn how to allow users to bookmark and share images that they find on other websites and on your site. For this, you will need to do the following tasks:
+
+    Define a model to store images and their information
+    Create a form and a view to handle image uploads
+    Build a system for users to be able to post images that they find on external websites
+    First, create a new application inside your bookmarks project directory with the following command:
+
+    django-admin startapp images
+
+    Creating many-to-many relationships
+    Next, you will add another field to the Image model to store the users who like an image. You will need a many-to-many relationship in this case because a user might like multiple images and each image can be liked by multiple users.
+
+    python manage.py makemigrations images
+    python manage.py migrate images
+
+    python manage.py runserver_plus --cert-file cert.crt
+
+    Posting content from other websites
+    You will allow users to bookmark images from external websites. The user will provide the URL of the image, a title, and an optional description. Your application will download the image and create a new Image object in the database.
+
+    Users will not enter the image URL directly in the form. Instead, you will provide them with a JavaScript tool to choose an image from an external site, and your form will receive its URL as a parameter.
+
+    In order to use the urllib to retrieve images from URLs served through HTTPS, you need to install the Certifi Python package. Certifi is a collection of root certificates for validating the trustworthiness of SSL/TLS certificates.
+
+    Install certifi with the following command:
+
+    pip install --upgrade certifi
+
+
 

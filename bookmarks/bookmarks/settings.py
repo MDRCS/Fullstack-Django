@@ -30,6 +30,7 @@ ALLOWED_HOSTS = ['mysite.com', 'localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'account.apps.AccountConfig',
+    'images.apps.ImagesConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -133,8 +134,8 @@ AUTHENTICATION_BACKENDS = [
     'social_core.backends.google.GoogleOAuth2',
 ]
 
-SOCIAL_AUTH_FACEBOOK_KEY = '3166063930141005'  # Facebook App ID
-SOCIAL_AUTH_FACEBOOK_SECRET = '2ecc0169671955796a7cfbace69d0873'  # Facebook App Secret
+SOCIAL_AUTH_FACEBOOK_KEY = ''  # Facebook App ID
+SOCIAL_AUTH_FACEBOOK_SECRET = ''  # Facebook App Secret
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 
 SOCIAL_AUTH_TWITTER_KEY = ''  # Twitter API Key
@@ -142,3 +143,6 @@ SOCIAL_AUTH_TWITTER_SECRET = ''  # Twitter API Secret
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = ''  # Google Consumer Key
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = ''  # Google Consumer Secret
+
+# 2ecc0169671955796a7cfbace69d0873
+# 3166063930141005
