@@ -1199,3 +1199,47 @@
     Open https://127.0.0.1:8000/account/ in your browser.
 
     pip install easy-thumbnails==2.7
+
+    Creating image thumbnails using easy-thumbnails
+
+    You are displaying the original image on the detail page, but dimensions for different images may vary considerably. Also, the original files for some images may be huge, and loading them might take too long. The best way to display optimized images in a uniform way is to generate thumbnails. Let's use a Django application called easy-thumbnails for this purpose.
+
+    Open the terminal and install easy-thumbnails using the following command:
+
+    pip install easy-thumbnails==2.7
+    Edit the settings.py file of the bookmarks project and add easy_thumbnails to the INSTALLED_APPS setting, as follows:
+
+    INSTALLED_APPS = [
+        # ...
+        'easy_thumbnails',
+    ]
+    Then, run the following command to sync the application with your database:
+
+    python manage.py migrate
+
+    The easy-thumbnails application offers several options to customize your thumbnails, including cropping algorithms and different effects that can be applied.
+    If you have any difficulty generating thumbnails, you can add THUMBNAIL_DEBUG = True to the settings.py file in order to obtain debug information. You can
+    read the full documentation of easy-thumbnails at https://easy-thumbnails.readthedocs.io/.
+
+    - Likes Feature :
+
+    + Adding AJAX actions with jQuery :
+    You are going to add a link to the image detail page to let users click on it in order to like an image. You will perform this action
+    with an AJAX call to avoid reloading the whole page.
+
+
+    - Explaining List_ajax for infinite scrolling / pagination :
+
+    You define the following variables:
+    page: Stores the current page number.
+    empty_page: Allows you to know whether the user is on the last page and retrieves an empty page. As soon as you get an empty page, you will stop sending additional AJAX requests because you will assume that there are no more results.
+    block_request: Prevents you from sending additional requests while an AJAX request is in progress.
+    You use $(window).scroll() to capture the scroll event and also to define a handler function for it.
+    You calculate the margin variable to get the difference between the total document height and the window height, because that's the height of the remaining content for the user to scroll. You subtract a value of 200 from the result so
+    that you load the next page when the user is closer than 200 pixels to the bottom of the page.
+    You only send an AJAX request if no other AJAX request is being done (block_request has to be false) and the user didn't get to the last page of results (empty_page is also false).
+    You set block_request to true to avoid a situation where the scroll event triggers additional AJAX requests, and increase the page counter by one, in order to retrieve the next page.
+    You perform an AJAX GET request using $.get() and receive the HTML response in a variable called data. The following are the two scenarios:
+    The response has no content: You got to the end of the results, and there are no more pages to load. You set empty_page to true to prevent additional AJAX requests.
+    The response contains data: You append the data to the HTML element with the image-list ID. The page content expands vertically, appending results when the user approaches the bottom of the page.”
+
