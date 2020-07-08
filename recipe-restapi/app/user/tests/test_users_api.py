@@ -6,6 +6,7 @@ from rest_framework import status
 
 CREATE_USER_URL = reverse('user:create')
 TOKEN_URL = reverse('user:token')
+MYACCOUNT_URL = reverse('user:me')
 
 
 def create_user(**param):
@@ -70,10 +71,10 @@ class PublicUserAPITest(TestCase):
         create_user(**payload)
         res = self.client.post(TOKEN_URL, payload)
         self.assertIn('token', res.data)
-        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     def test_create_user_invalid_credentials(self):
-        create_user(email='test@rahali.com', password= 'pass123')
+        create_user(email='test@rahali.com', password='pass123')
         payload = {
             'name': 'mdrahali',
             'email': 'test@rahali.com',
@@ -96,4 +97,49 @@ class PublicUserAPITest(TestCase):
         self.assertNotIn('token', res.data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_retrieve_user_unauthorized(self):
+        """ Test that authentication is required to retrieve user info """
 
+        res = self.client.get(MYACCOUNT_URL)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class PrivateUserAPITest(TestCase):
+    """ Test that need User Authentication  """
+
+    def setUp(self):
+        payload = {
+            'name': 'mdrahali',
+            'email': 'test@rahali.com',
+            'password': 'pass123',
+        }
+        self.user = create_user(**payload)
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_retrieve_profile_success(self):
+        res = self.client.get(MYACCOUNT_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, {'name': 'mdrahali', 'email': 'test@rahali.com'})
+
+    def test_post_not_allowed(self):
+        """ Test that POST method is not allowed on the /me url """
+
+        res = self.client.post(MYACCOUNT_URL)
+        self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_update_user_profile(self):
+        payload = {
+            'name': 'new name',
+            'email': 'new_email@rahali.com',
+            'password': 'newpass',
+        }
+        res = self.client.patch(MYACCOUNT_URL, payload)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.name, payload['name'])
+        self.assertTrue(self.user.check_password(payload['password']))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    
