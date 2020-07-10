@@ -32,3 +32,6 @@
 
     + create django app `recipe` :
     $ docker-compose run --rm app sh -c "python manage.py startapp recipe"
+
+    + run server :
+    $ docker-compose up
