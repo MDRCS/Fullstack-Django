@@ -35,3 +35,6 @@
 
     + run server :
     $ docker-compose up
+
+    - Testing uploading images :
+    $ http://127.0.0.1:8000/api/recipe/recipes/1/upload-image/
