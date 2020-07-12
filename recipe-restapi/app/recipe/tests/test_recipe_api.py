@@ -188,6 +188,44 @@ class PrivateRecipeAPITest(TestCase):
         tags = recipe.tags.all()
         self.assertEqual(len(tags), 0)
 
+    def test_filter_recipes_by_tags(self):
+        """ Test filter recipes by tags """
+        recipe_1 = sample_recipe(user=self.user, title='Thai vegetable')
+        recipe_2 = sample_recipe(user=self.user, title='Aubergine with tahini')
+        tag1 = sample_tags(user=self.user, name='Vegan')
+        tag2 = sample_tags(user=self.user, name='Vegetarian')
+        recipe_1.tags.add(tag1)
+        recipe_2.tags.add(tag2)
+        recipe_3 = sample_recipe(user=self.user, title='Fish and chips')
+
+        res = self.client.get(RECIPES_URL, {'tags': f'{tag1.id},{tag2.id}'})
+
+        serializer_1 = RecipeSerializer(recipe_1)
+        serializer_2 = RecipeSerializer(recipe_2)
+        serializer_3 = RecipeSerializer(recipe_3)
+
+        self.assertIn(serializer_1.data, res.data)
+        self.assertIn(serializer_2.data, res.data)
+        self.assertNotIn(serializer_3.data, res.data)
+
+    def test_filter_recipes_by_ingredients(self):
+        """ Test filter recipes by ingredients """
+        recipe_1 = sample_recipe(user=self.user, title='Thai vegetable')
+        recipe_2 = sample_recipe(user=self.user, title='Aubergine with tahini')
+        ingredient_1 = sample_ingredients(user=self.user, name='Feta cheese')
+        ingredient_2 = sample_ingredients(user=self.user, name='Chicken')
+        recipe_1.ingredients.add(ingredient_1)
+        recipe_2.ingredients.add(ingredient_2)
+        recipe_3 = sample_recipe(user=self.user, title='Fish and chips')
+
+        res = self.client.get(RECIPES_URL, {'ingredients': f'{ingredient_1.id},{ingredient_2.id}'})
+        serializer_1 = RecipeSerializer(recipe_1)
+        serializer_2 = RecipeSerializer(recipe_2)
+        serializer_3 = RecipeSerializer(recipe_3)
+
+        self.assertIn(serializer_1.data, res.data)
+        self.assertIn(serializer_2.data, res.data)
+        self.assertNotIn(serializer_3.data, res.data)
 
 class RecipeImageUploadTests(TestCase):
     def setUp(self):

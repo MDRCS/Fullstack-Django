@@ -38,3 +38,11 @@
 
     - Testing uploading images :
     $ http://127.0.0.1:8000/api/recipe/recipes/1/upload-image/
+
+    - Testing Filtering from recipes  :
+    $ http://127.0.0.1:8000/api/recipe/recipes/?ingredients=2
+    $ http://127.0.0.1:8000/api/recipe/recipes/?ingredients=2&tags=1
+
+    - Testing Filtering from Tags and Ingredients :
+    $ http://127.0.0.1:8000/api/recipe/tags/?assigned_only=1
+    $ http://127.0.0.1:8000/api/recipe/ingredients/?assigned_only=1
