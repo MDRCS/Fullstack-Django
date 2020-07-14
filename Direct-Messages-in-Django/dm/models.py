@@ -6,12 +6,14 @@ from django.db.models import Count
 
 User = settings.AUTH_USER_MODEL
 
+
 # Create your models here.
 class BaseModel(models.Model):
     # 1, 2, 3, 4, 5, 6
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, db_index=True, editable=False)
     timestamp = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
     # foreignkey
     # textfield
 
@@ -28,7 +30,8 @@ class ChannelMessage(BaseModel):
 class ChannelUser(BaseModel):
     channel = models.ForeignKey("Channel", on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    # permissions? 
+    # permissions?
+
 
 # jon_snow -> ned_stark
 # ned_stark -> jon_snow
@@ -42,17 +45,19 @@ class ChannelQuerySet(models.QuerySet):
 
     def only_two(self):
         return self.annotate(num_users=Count("users")).filter(num_users=2)
-    
+
     def filter_by_username(self, username):
         return self.filter(channeluser__user__username=username)
+
 
 class ChannelManager(models.Manager):
     def get_queryset(self, *args, **kwargs):
         return ChannelQuerySet(self.model, using=self._db)
-    
+
     def filter_by_private_message(self, username_a, username_b):
-        return self.get_queryset().only_two().filter_by_username(username_a).filter_by_username(username_b).order_by("timestamp")
-    
+        return self.get_queryset().only_two().filter_by_username(username_a).filter_by_username(username_b).order_by(
+            "timestamp")
+
     def get_or_create_current_user_private_message(self, user):
         qs = self.get_queryset().only_one().filter_by_username(user.username)
         if qs.exists():
@@ -61,11 +66,10 @@ class ChannelManager(models.Manager):
         ChannelUser.objects.create(user=user, channel=channel_obj)
         return channel_obj, True
 
-
     def get_or_create_private_message(self, username_a, username_b):
         qs = self.filter_by_private_message(username_a, username_b)
         if qs.exists():
-            return qs.order_by("timestamp").first(), False # obj, created
+            return qs.order_by("timestamp").first(), False  # obj, created
         User = apps.get_model("auth", model_name='User')
         user_a, user_b = None, None
         try:
@@ -85,16 +89,16 @@ class ChannelManager(models.Manager):
         return channel_obj, True
 
 
-class Channel(BaseModel): # models.model
+class Channel(BaseModel):  # models.model
     # slack-like
     # 1 user
     # 2 users
     # 2+ users
     users = models.ManyToManyField(User, blank=True, through=ChannelUser)
-    # channel_type 
-    # max_users 
+    # channel_type
+    # max_users
     # status -> private, public
-    # slug -> Lookup slug 
+    # slug -> Lookup slug
     # title -> Channel name/title
 
     objects = ChannelManager()
