@@ -21,21 +21,9 @@ urlpatterns = [
 
     path('', views.dashboard, name='dashboard'),
     path('', include('django.contrib.auth.urls')),
-    path('users/', views.user_list, name='user_list'),
-    path('users/<username>', views.user_detail, name='user_detail'),
     path('register/', views.register, name='register'),
     path('edit/', views.edit, name='edit'),
+    path('users/', views.user_list, name='user_list'),
+    path('users/follow/', views.user_follow, name='user_follow'),
+    path('users/<username>/', views.user_detail, name='user_detail'),
 ]
-
-"""
-- Edit the urls.py file of the account application, and add a URL pattern for each view, as follows:
-
-urlpatterns = [
-   # ...
-   path('users/', views.user_list, name='user_list'),
-   path('users/<username>/', views.user_detail, name='user_detail'),
-]
-
-You will use the user_detail URL pattern to generate the canonical URL for users. You have already defined a get_absolute_url() method in a model to return the canonical URL”
-
-"""

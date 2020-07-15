@@ -1249,5 +1249,62 @@
 
     Let's build a follow system in your project. This means that your users will be able to follow each other and track what other users share on the platform. The relationship between users is a many-to-many relationship: a user can follow multiple users and they, in turn, can be followed by multiple users.
 
+    - Using signals for denormalizing counts
 
-    329 to be continued
+    There are some cases when you may want to denormalize your data. Denormalization is making data redundant in such a way that it optimizes read performance. For example, you might be copying related data to an object to avoid expensive read queries to the database when retrieving the related data. You have to be careful about denormalization and only start using it when you really need it. The biggest issue you will find with denormalization is that it's difficult to keep your denormalized data updated.
+    Let's take a look at an example of how to improve your queries by denormalizing counts. You will denormalize data from your Image model and use Django signals to keep the data updated.
+
+    Working with signals
+    Django comes with a signal dispatcher that allows receiver functions to get notified when certain actions occur. Signals are very useful when you need your code to do something every time something else happens. Signals allow you to decouple logic: you can capture a certain action, regardless of the application or code that triggered that action, and implement logic that gets executed whenever that action occurs. For example, you can build a signal[…]”
+
+    Storing item views in Redis
+    Let's find a way to store the total number of times an image has been viewed. If you implement this using the Django ORM, it will involve a SQL UPDATE query every time an image is displayed. If you use Redis instead, you just need to increment a counter stored in memory, resulting in a much better performance and less overhead.”
+
+    def image_detail(request, id, slug):
+        image = get_object_or_404(Image, id=id, slug=slug)
+        # increment total image views by 1
+        total_views = r.incr(f'image:{image.id}:views')
+        # increment image ranking by 1
+        r.zincrby('image_ranking', 1, image.id)
+        return render(request,
+                      'images/image/detail.html',
+                      {'section': 'images',
+                       'image': image,
+                       'total_views': total_views})
+
+    You use the zincrby() command to store image views in a sorted set with the image:ranking key. You will store the image id and a related score of 1, which will be added to the total score of this element in the sorted set. This will allow you to keep track of all image views globally and have a sorted set ordered by the total number of views.”
+
+    “Now, create a new view to display the ranking of the most viewed images. Add the following code to the views.py file of the images application:
+
+    @login_required
+    def image_ranking(request):
+        # get image ranking dictionary
+        image_ranking = r.zrange('image_ranking', 0, -1,
+                                 desc=True)[:10]
+        image_ranking_ids = [int(id) for id in image_ranking]
+        # get most viewed images
+        most_viewed = list(Image.objects.filter(
+                               id__in=image_ranking_ids))
+        most_viewed.sort(key=lambda x: image_ranking_ids.index(x.id))
+        return render(request,
+                      'images/image/ranking.html',
+                      {'section': 'images',
+                       'most_viewed': most_viewed})
+    The image_ranking view works like this:
+
+    You use the zrange() command to obtain the elements in the sorted set. This command expects a custom range according to the lowest and highest score. Using 0 as the lowest and -1 as the highest score, you are telling Redis to return all elements in the sorted set. You also specify desc=True to retrieve the elements ordered by descending score. Finally, you slice the results using [:10] to get the first 10 elements with the highest score.
+    You build a list of returned image IDs and store it in the image_ranking_ids variable as a list of integers. You retrieve the Image objects for those IDs and force the query to be executed using the list() function. It[…]”
+
+    the image ranking. Now you can use the most_viewed list in your template to display the 10 most viewed images.”
+
+    ++ use cases of REDIS :
+
+    Redis is not a replacement for your SQL database, but it does offer fast in-memory storage that is more suitable for certain tasks. Add it to your stack and use it when you really feel it's needed. The following are some scenarios in which Redis could be useful:
+    Counting: As you have seen, it is very easy to manage counters with Redis. You can use incr() and incrby() for counting stuff.”
+    Storing latest items: You can add items to the start/end of a list using lpush() and rpush(). Remove and return the first/last element using lpop() / rpop(). You can trim the list's length using ltrim() to maintain its length.
+    Queues: In addition to push and pop commands, Redis offers the blocking of queue commands.
+    Caching: Using expire() and expireat() allows you to use Redis as a cache. You can also find third-party Redis cache backends for Django.
+    Pub/sub: Redis provides commands for subscribing/unsubscribing and sending messages to channels.
+    Rankings and leaderboards: Redis sorted sets with scores make it very easy to create leaderboards.
+    Real-time tracking: Redis's fast I/O makes it perfect for real-time scenarios.
+
