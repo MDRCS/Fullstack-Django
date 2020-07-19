@@ -1308,3 +1308,79 @@
     Rankings and leaderboards: Redis sorted sets with scores make it very easy to create leaderboards.
     Real-time tracking: Redis's fast I/O makes it perfect for real-time scenarios.
 
+    - Building a shopping cart :
+
+    After building the product catalog, the next step is to create a shopping cart so that users can pick the products that they want to purchase. A shopping cart allows users to select products and set the amount they want to order, and then store this information temporarily while they browse the site, until they eventually place an order. The cart has to be persisted in the session so that the cart items are maintained during a user's visit.
+    You will use Django's session framework to persist the cart. The cart will be kept in the session until it finishes or the user checks out of the cart. You will also need to build additional Django models for the cart and its items.”
+
+    To use sessions, you have to make sure that the MIDDLEWARE setting of your project contains 'django.contrib.sessions.middleware.SessionMiddleware'. This middleware manages sessions. It's added by default to the MIDDLEWARE setting when you create a new project using the startproject command.
+
+    - Using Django sessions
+    Django provides a session framework that supports anonymous and user sessions. The session framework allows you to store arbitrary data for each visitor. Session data is stored on the server side, and cookies contain the session ID unless you use the cookie-based session engine. The session middleware manages the sending and receiving of cookies.
+    The default session engine stores session data in the database, but you can choose other session engines.
+
+    When users log in to the site, their anonymous session is lost and a new session is created for authenticated users. If you store items in an anonymous session that you need to keep after the user logs in, you will have to copy the old session data into the new session. You can do this by retrieving the session data before you log in the user using the login()
+    function of the Django authentication system and storing it in the session after that.
+
+    Session settings
+    There are several settings you can use to configure sessions for your project. The most important is SESSION_ENGINE. This setting allows you to set the place where sessions are stored. By default, Django stores sessions in the database using the Session model of the django.contrib.sessions application.
+
+    Django offers the following options for storing session data:
+
+    Database sessions: Session data is stored in the database. This is the default session engine.
+    File-based sessions: Session data is stored in the filesystem.
+    Cached sessions: Session data is stored in a cache backend. You can specify cache backends using the CACHES setting. Storing session data in a cache system provides the best performance.
+    Cached database sessions: Session data is stored in a write-through cache and database. Reads only use the database if the data is not already in the cache.
+    Cookie-based sessions: Session data is stored in the cookies that are sent to the browser.”
+
+    For better performance use a cache-based session engine. Django supports Memcached out of the box and you can find third-party cache backends for Redis and other cache systems.
+
+    You can customize sessions with specific settings. Here are some of the important session-related settings:
+
+    SESSION_COOKIE_AGE: The duration of session cookies in seconds. The default value is 1209600 (two weeks).
+    SESSION_COOKIE_DOMAIN: The domain used for session cookies. Set this to mydomain.com to enable cross-domain cookies or use None for a standard domain cookie.
+    SESSION_COOKIE_SECURE: A Boolean indicating that the cookie should only be sent if the connection is an HTTPS connection.
+    SESSION_EXPIRE_AT_BROWSER_CLOSE: A Boolean indicating that the session has to expire when the browser is closed.
+    SESSION_SAVE_EVERY_REQUEST: A Boolean that, if True, will save the session to the database on every request. The session expiration is also updated each time it's saved.
+    You can see all the session settings and their default values at https://docs.djangoproject.com/en/3.0/ref/settings/#sessions.
+
+    Session expiration
+    You can choose to use browser-length sessions or persistent sessions using the SESSION_EXPIRE_AT_BROWSER_CLOSE setting. This is set to False by default,
+    forcing the session duration to the value stored in the SESSION_COOKIE_AGE setting. If you set SESSION_EXPIRE_AT_BROWSER_CLOSE to True, the session will
+    expire when the user closes the browser, and the SESSION_COOKIE_AGE setting will not have any effect.
+
+    Storing shopping carts in sessions
+    You need to create a simple structure that can be serialized to JSON for storing cart items in a session. The cart has to include the following data for each item contained in it:
+
+    The ID of a Product instance
+    The quantity selected for the product
+    The unit price for the product
+
+    Since product prices may vary, let's take the approach of storing the product's price along with the product itself when it's added
+
+    to the cart. By doing so, you use the current price of the product when users add it to their cart, no matter whether the product's price is changed afterwards. This means that the price that the item has when the client adds it to the cart is maintained for that client in the session until checkout is completed or the session finishes.
+
+    Next, you have to build functionality to create shopping carts and associate them with sessions. This has to work as follows:
+
+    When a cart is needed, you check whether a custom session key is set. If no cart is set in the session, you create a new cart and save it in the cart session key.
+    For successive requests, you perform the same check and get the cart items from the cart session key. You retrieve the cart items from the session and their related Product objects from the database.
+    Edit the settings.py file of your project and add the following setting to it:
+
+    CART_SESSION_ID = 'cart'
+    This is the key that you are going to use to store the cart in the user session. Since Django sessions are managed per visitor, you can use the same
+
+
+    Creating shopping cart views
+    Now that you have a Cart class to manage the cart, you need to create the views to add, update, or remove items from it. You need to create the following views:
+
+    A view to add or update items in the cart that can handle current and new quantities
+    A view to remove items from the cart
+    A view to display cart items and totals
+
+    <!--<p class="text-right">-->
+<!--  <a href="{% url "shop:product_list" %}" class="button-->
+<!--  light">Continue shopping</a>-->
+<!--  <a href="{% url "orders:order_create" %}" class="button">-->
+<!--    Checkout-->
+<!--  </a>-->
+<!--</p>-->
