@@ -1397,11 +1397,81 @@
     Context processors are executed in all the requests that use RequestContext. You might want to create a custom template tag instead of a context processor if your functionality
     is not needed in all templates, especially if it involves database queries.
 
+    Registering customer orders
+    When a shopping cart is checked out, you need to save an order into the database. Orders will contain information about customers and the products they are buying.
+
+    Creating customer orders
+    You will use the order models that you created to persist the items contained in the shopping cart when the user finally places an order. A new order will be created following these steps:
+
+    Present a user with an order form to fill in their data
+    Create a new Order instance with the data entered, and create an associated OrderItem instance for each item in the cart
+    Clear all the cart's contents and redirect the user to a success page
+
+    Launching asynchronous tasks with Celery
+
+    Everything you execute in a view affects response times. In many situations, you might want to return a response to the user as quickly as possible and let the server execute some process
+    asynchronously. This is especially relevant for time-consuming processes or processes subject to failure, which might need a retry policy. For example, a video sharing platform allows users
+    to upload videos but requires a long time to transcode uploaded videos. The site might return a response to users to inform them that the transcoding will start soon, and start transcoding
+    the video asynchronously. Another example is sending emails to users. If your site sends email notifications from a view, the Simple Mail Transfer Protocol (SMTP) connection might fail or slow down the response.
+    Launching asynchronous tasks is essential to avoid blocking the code execution.
+    Celery is a distributed task queue that can process vast amounts of messages. Using Celery, not only can you create asynchronous tasks easily and let them be executed by workers as soon as possible, but you can
+    also schedule them to run at a specific time.
+
+    pip install celery==4.4.2
+
+    Celery requires a message broker in order to handle requests from an external source. A message broker is used to translate messages to a formal messaging protocol and manage message queues for multiple receivers,
+    providing reliable storage and guaranteed message delivery. You use a message broker to send messages to Celery workers, which process tasks as they receive them.
+
+    - Setting up RabbitMQ :
+    brew install rabbitmq
+    rabbitmq-server start
+    brew services start rabbitmq
+    brew services list
+
+    + url to access to Rabbitmq -> http://localhost:15672/
+    + login -> guest/guest
+
+    Finally, you tell Celery to auto-discover asynchronous tasks for your applications. Celery will look for a tasks.py file in each application directory of applications added to INSTALLED_APPS in order to load asynchronous tasks defined in it.
+    You need to import the celery module in the __init__.py file of your project to make sure it is loaded when Django starts. Edit the myshop/__init__.py file and add the following code to it:
+
+    # import celery
+    from .celery import app as celery_app
+    Now you can start programming asynchronous tasks for your applications.
+
+    The CELERY_ALWAYS_EAGER setting allows you to execute tasks locally in a synchronous way, instead of sending them to the queue. This is useful for running unit tests or executing the application in your local environment without running Celery.
+
+    Adding asynchronous tasks to your application
+    Next, you are going to create an asynchronous task to send an email notification to your users when they place an order.
+
+    convention is to include asynchronous tasks for your application in a tasks module within your application directory.
+
+    ++ Use asynchronous tasks not only for time-consuming processes, but also for other processes that do not take so much time to be executed but which are subject to connection failures or require a retry policy.
+
+    in views.py OrderCreate add :
+    OrderCreated.delay(order.id)
+
+    You call the delay() method of the task to execute it asynchronously. The task will be added to the queue and will be executed by a worker as soon as possible.”
+
+    to launch a celery worker run -> celery -A online_shop worker -l info
+
+    Monitoring Celery
+    You might want to monitor the asynchronous tasks that are executed. Flower is a web-based tool for monitoring Celery. You can install Flower using this command:
+
+    pip install flower==0.9.3
+    Once installed, you can launch Flower by running the following command from your project directory:
+
+    celery -A online_shop flower
+    Open http://localhost:5555/dashboard in your browser.
+
+    Summary
+    In this chapter, you created a basic shop application. You made a product catalog and built a shopping cart using sessions. You implemented a custom context processor to make
+    the cart available to your templates and created a form for placing orders. You also learned how to launch asynchronous tasks with Celery.
+    In the next chapter, you will discover how to integrate a payment gateway into your shop, add custom actions to the administration site, export data in CSV format, and generate PDF files dynamically.
 
     <!--<p class="text-right">-->
-<!--  <a href="{% url "shop:product_list" %}" class="button-->
-<!--  light">Continue shopping</a>-->
-<!--  <a href="{% url "orders:order_create" %}" class="button">-->
-<!--    Checkout-->
-<!--  </a>-->
-<!--</p>-->
+    <!--  <a href="{% url "shop:product_list" %}" class="button-->
+    <!--  light">Continue shopping</a>-->
+    <!--  <a href="{% url "orders:order_create" %}" class="button">-->
+    <!--    Checkout-->
+    <!--  </a>-->
+    <!--</p>-->
