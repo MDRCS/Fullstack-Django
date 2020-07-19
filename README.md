@@ -1377,6 +1377,27 @@
     A view to remove items from the cart
     A view to display cart items and totals
 
+    ** Creating a context processor for the current cart
+    You might have noticed that the message Your cart is empty is displayed in the header of the site, even when the cart contains items. You should display the total number of
+    items in the cart and the total cost instead. Since this has to be displayed on all pages, you need to build a context processor to include the current cart in the request context, regardless of the view that processes the request.
+
+    Context processors
+
+    A context processor is a Python function that takes the request object as an argument and returns a dictionary that gets added to the request context. Context processors come in handy when you need to make something available globally to all templates.
+
+    By default, when you create a new project using the startproject command, your project contains the following template context processors in the context_processors option inside the TEMPLATES setting:
+
+    django.template.context_processors.debug: This sets the Boolean debug and sql_queries variables in the context, representing the list of SQL queries executed in the request
+    django.template.context_processors.request: This sets the request variable in the context
+    django.contrib.auth.context_processors.auth: This sets the user variable in the request
+    django.contrib.messages.context_processors.messages: This sets a messages variable in the context containing all the messages that have been generated using the messages framework
+    Django also enables django.template.context_processors.csrf to avoid cross-site request forgery (CSRF) attacks. This context processor is not present in the settings, but it is always enabled and can't be turned off for security reasons.”
+
+
+    Context processors are executed in all the requests that use RequestContext. You might want to create a custom template tag instead of a context processor if your functionality
+    is not needed in all templates, especially if it involves database queries.
+
+
     <!--<p class="text-right">-->
 <!--  <a href="{% url "shop:product_list" %}" class="button-->
 <!--  light">Continue shopping</a>-->

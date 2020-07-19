@@ -47,6 +47,4 @@
     * You use the list_editable attribute in the ProductAdmin class to set the fields that can be edited from the list display page of the administration site. This will allow
     you to edit multiple rows at once. Any field in list_editable must also be listed in the list_display attribute, since only the fields displayed can be edited.
 
-    Creating a context processor for the current cart
-    You might have noticed that the message Your cart is empty is displayed in the header of the site, even when the cart contains items. You should display the total number of
-    items in the cart and the total cost instead. Since this has to be displayed on all pages, you need to build a context processor to include the current cart in the request context, regardless of the view that processes the request.
+
