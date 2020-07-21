@@ -1577,8 +1577,14 @@
     You are going to create a coupon system for your shop. Your coupons will be valid for customers in a certain time frame. The coupons will not have any limitations in terms of the number of times they can be redeemed, and they will be applied
     to the total value of the shopping cart. For this functionality, you will need to create a model to store the coupon code, a valid time frame, and the discount to apply.
 
+    Applying a coupon to the shopping cart
+    You can store new coupons and make queries to retrieve existing coupons. Now you need a way for customers to apply coupons to their purchases. The functionality to apply a coupon would be as follows:
 
-
+    1- The user adds products to the shopping cart.
+    2- The user can enter a coupon code in a form displayed on the shopping cart detail page.
+    3- When the user enters a coupon code and submits the form, you look for an existing coupon with the given code that is currently valid. You have to check that the coupon code matches the one entered by the user, that the active attribute is True, and that the current datetime is between the valid_from and valid_to values.
+    4- If a coupon is found, you save it in the user's session and display the cart, including the discount applied to it and the updated total amount.
+    5- When the user places an order, you save the coupon to the given order.
 
     <!--<p class="text-right">-->
     <!--  <a href="{% url "shop:product_list" %}" class="button-->
