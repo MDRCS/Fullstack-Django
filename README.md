@@ -1468,6 +1468,118 @@
     the cart available to your templates and created a form for placing orders. You also learned how to launch asynchronous tasks with Celery.
     In the next chapter, you will discover how to integrate a payment gateway into your shop, add custom actions to the administration site, export data in CSV format, and generate PDF files dynamically.
 
+    Managing Payments and Orders
+    In this chapter, you will learn how to integrate a payment gateway into your site to let users pay by credit card. You will also extend the administration site with different features.
+
+    In this chapter, you will:
+
+    Integrate a payment gateway into your project
+    Export orders to CSV files
+    Create custom views for the administration site
+    Generate PDF invoices dynamically
+
+    Integrating a payment gateway
+    A payment gateway allows you to process payments online. Using a payment gateway, you can manage customers' orders and delegate payment processing to a reliable, secure third party. You won't have to worry about processing credit cards in your own system.
+
+    Braintree provides an API that allows you to process online payments with multiple payment methods, such as credit card, PayPal, Google Pay, and Apple Pay. You can learn more about Braintree at https://www.braintreepayments.com/.
+
+    Installing the Braintree Python module
+    Braintree provides a Python module that simplifies dealing with its API. You are going to integrate the payment gateway into your project using the braintree module.
+
+    Install the braintree module from the shell using the following command:
+
+    $ pip install braintree==3.59.0
+    Add the following settings to the settings.py file of your project:
+
+    # Braintree settings
+    BRAINTREE_MERCHANT_ID = 'XXX'  # Merchant ID
+    BRAINTREE_PUBLIC_KEY = 'XXX'   # Public Key
+    BRAINTREE_PRIVATE_KEY = 'XXX'  # Private key
+    import braintree
+    BRAINTREE_CONF = braintree.Configuration(
+        braintree.Environment.Sandbox,
+        BRAINTREE_MERCHANT_ID,
+        BRAINTREE_PUBLIC_KEY,
+        BRAINTREE_PRIVATE_KEY
+    )
+
+    Replace the BRAINTREE_MERCHANT_ID, BRAINTREE_PUBLIC_KEY, and BRAINTREE_PRIVATE_KEY values with the ones for your account.
+
+    You use Environment.Sandbox for integrating the sandbox. Once you go live and create a real account, you will need to change this to Environment.Production. Braintree will provide you with a new merchant ID and private/public keys
+    for the production environment. In Chapter 14, Going Live, you will learn how to configure settings for multiple environments.
+
+    The checkout process will work as follows:
+
+    1- Add items to the shopping cart
+    2- Check out the shopping cart
+    3- Enter credit card details and pay
+
+    Integrating Braintree using Hosted Fields
+
+    The Hosted Fields integration allows you to create your own payment form using custom styles and layouts. An iframe is added dynamically to the page using the Braintree JavaScript software development kit (SDK). The iframe includes the Hosted Fields payment form. When the customer submits the form, Hosted Fields collects the card details securely and attempts to tokenize them. If tokenization succeeds, you can send the generated token nonce to your view to make a transaction using the Python braintree module. A token nonce is a secure, one-time-use reference to payment information. It allows you to send sensitive payment information to Braintree without touching the raw data.
+
+    Let's create a view for processing payments. The whole checkout process will work as follows:
+
+    In the view, a client token is generated using the braintree Python module. This token is used in the next step to instantiate the Braintree JavaScript client; it's not the payment token nonce.
+    The view renders the checkout template. The template loads the Braintree JavaScript SDK using the client token and generates the iframe with the hosted payment form fields.
+    Users enter their credit card details and submit the form, A payment token nonce is generated with the Braintree JavaScript client. You send the token to your view with a POST request.
+    The payment view receives the token nonce and you use it to generate a transaction using the braintree Python module.
+
+    These are especially useful to know why a transaction might have been declined. You can obtain a response code using result.transaction.processor_response_code and its associated response text using result.transaction.processor_response_text. You can find the list of payment
+    authorization responses at https://developers.braintreepayments.com/reference/general/processor-responses/authorization-responses.
+
+    - Remember ! :
+
+    -- Going live --
+    Once you have tested your environment, you can create a real Braintree account at https://www.braintreepayments.com. Once you are ready to move into production, remember to change your live environment credentials in the settings.py file of your project and use braintree.Environment.Production
+    to set up your environment. All steps to go live are summarized at https://developers.braintreepayments.com/start/go-live/python.
+
+    Exporting orders to CSV files
+    Sometimes, you might want to export the information contained in a model to a file so that you can import it in another system. One of the most widely used formats to export/import data is comma-separated values (CSV). A CSV file is a plain text file consisting of a number of records.
+    There is usually one record per line and some delimiter character, usually a literal comma, separating the record fields. You are going to customize the administration site to be able to export orders to CSV files.
+
+    You are going to create a custom administration action to download a list of orders as a CSV file. Edit the admin.py file of the orders application and add the following code before the OrderAdmin class. "csv code'
+
+    Extending the administration site with custom views
+
+    Sometimes, you may want to customize the administration site beyond what is possible through configuring ModelAdmin, creating administration actions, and overriding administration templates. You might want to implement additional functionalities that are not available in existing administration views or
+    templates. If this is the case, you need to create a custom administration view. With a custom view, you can build any functionality you want; you just have to make sure that only staff users can access your view and that you maintain the administration look and feel by making your template extend an administration template.
+    Let's create a custom view to display information about an order. Edit the views.py file of the orders application and add the following code to it
+
+    This is the template to display the details of an order on the administration site. This template extends the admin/base_site.html template of Django's administration site, which contains the main HTML structure and CSS styles.
+    brew install python cairo pango gdk-pixbuf libxml2 libxslt libffi
+    pip install WeasyPrint==51
+
+    + Generate Static files :
+    $ python manage.py collectstatic
+
+    The collectstatic command copies all static files from your applications into the directory defined in the STATIC_ROOT setting. This allows each application to provide its own static files using a static/ directory containing them.
+    You can also provide additional static files sources in the STATICFILES_DIRS
+
+    Sending PDF files by email
+    When a payment is successful, you will send an automatic email to your customer including the generated PDF invoice. You will create an asynchronous task to perform this action.
+
+    Extending Your Shop
+
+    In this chapter, you will add a coupon system to your shop. You will also learn how internationalization and localization work, and you will build a recommendation engine.
+
+    This chapter will cover the following points:
+
+    Creating a coupon system to apply discounts
+    Adding internationalization to your project
+    Using Rosetta to manage translations
+    Translating models using django-parler
+    Building a product recommendation engine
+
+    Creating a coupon system
+
+    Many online shops give out coupons to customers that can be redeemed for discounts on their purchases. An online coupon usually consists of a code that is given to users and is valid for a specific time frame.
+    You are going to create a coupon system for your shop. Your coupons will be valid for customers in a certain time frame. The coupons will not have any limitations in terms of the number of times they can be redeemed, and they will be applied
+    to the total value of the shopping cart. For this functionality, you will need to create a model to store the coupon code, a valid time frame, and the discount to apply.
+
+
+
+
     <!--<p class="text-right">-->
     <!--  <a href="{% url "shop:product_list" %}" class="button-->
     <!--  light">Continue shopping</a>-->
