@@ -1,13 +1,18 @@
 from django.db import models
 from django.urls import reverse
+from parler.models import TranslatableModel, TranslatedFields
 
 
-class Category(models.Model):
-    name = models.CharField(max_length=200, db_index=True)
-    slug = models.SlugField(max_length=200, db_index=True)
+class Category(TranslatableModel):
+    translations = TranslatedFields(name=models.CharField(max_length=200, db_index=True),
+                                    slug=models.SlugField(max_length=200, db_index=True))
 
     class Meta:
-        ordering = ('name',)
+        """     Since Django uses a separate table for translations, there are some Django features that you can't use.
+                It is not possible to use a default ordering by a translated field. You can filter by translated fields
+                in queries, but you can't include a translatable field in the ordering Meta options.
+        """
+        # ordering = ('name',)
         verbose_name = 'category'
         verbose_name_plural = 'categories'
 
@@ -18,10 +23,13 @@ class Category(models.Model):
         return reverse('shop:product_list_by_category', args=[self.slug])
 
 
-class Product(models.Model):
+class Product(TranslatableModel):
+    translations = TranslatedFields(
+        name=models.CharField(max_length=200, db_index=True),
+        slug=models.SlugField(max_length=200, db_index=True)
+    )
+
     category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
-    name = models.CharField(max_length=200, db_index=True)
-    slug = models.SlugField(max_length=200, db_index=True)
     image = models.ImageField(upload_to='products/%Y/%m/%d', blank=True)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -29,9 +37,9 @@ class Product(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        ordering = ('name',)
-        index_together = (('id', 'slug'),)
+    # class Meta:
+    #     ordering = ('name',)
+    #     index_together = (('id', 'slug'),)
 
     def __str__(self):
         return self.name

@@ -1,0 +1,170 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-07-22 14:56+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: cart/forms.py:12
+msgid "Quantity"
+msgstr ""
+
+#: coupons/forms.py:5
+msgid "Coupon"
+msgstr ""
+
+#: online_shop/settings.py:152
+msgid "English"
+msgstr ""
+
+#: online_shop/settings.py:153
+msgid "Spanish"
+msgstr ""
+
+#: online_shop/urls.py:25
+msgid "admin/"
+msgstr ""
+
+#: online_shop/urls.py:26
+msgid "cart/"
+msgstr ""
+
+#: online_shop/urls.py:27
+msgid "orders/"
+msgstr ""
+
+#: online_shop/urls.py:28
+msgid "payment/"
+msgstr ""
+
+#: online_shop/urls.py:29
+msgid "coupons/"
+msgstr ""
+
+#: orders/models.py:9
+msgid "first name"
+msgstr ""
+
+#: orders/models.py:10
+msgid "last name"
+msgstr ""
+
+#: orders/models.py:11
+msgid "e-mail"
+msgstr ""
+
+#: orders/models.py:12
+msgid "address"
+msgstr ""
+
+#: orders/models.py:13
+msgid "postal code"
+msgstr ""
+
+#: orders/models.py:14
+msgid "city"
+msgstr ""
+
+#: orders/templates/orders/order/create.html:5
+#: orders/templates/orders/order/create.html:9
+msgid "Checkout"
+msgstr ""
+
+#: orders/templates/orders/order/create.html:12
+msgid "Your order"
+msgstr ""
+
+#: orders/templates/orders/order/create.html:22
+#, python-format
+msgid ""
+"\n"
+"            \"%(code)s\" (%(discount)s%% off)\n"
+"          "
+msgstr ""
+
+#: orders/templates/orders/order/create.html:29
+msgid "Total"
+msgstr ""
+
+#: orders/templates/orders/order/create.html:34
+msgid "Place order"
+msgstr ""
+
+#: orders/urls.py:8
+msgid "create/"
+msgstr ""
+
+#: payment/urls.py:7
+msgid "process/"
+msgstr ""
+
+#: payment/urls.py:8
+msgid "done/"
+msgstr ""
+
+#: payment/urls.py:9
+msgid "canceled/"
+msgstr ""
+
+#: shop/templates/shop/base.html:6 shop/templates/shop/base.html:11
+msgid "My shop"
+msgstr ""
+
+#: shop/templates/shop/base.html:16
+msgid "Language"
+msgstr ""
+
+#: shop/templates/shop/base.html:34
+msgid "Your cart"
+msgstr ""
+
+#: shop/templates/shop/base.html:36
+#, python-format
+msgid ""
+"\n"
+"                %(items)s item, $%(total)s\n"
+"              "
+msgid_plural ""
+"\n"
+"                %(items)s items, $%(total)s\n"
+"              "
+msgstr[0] ""
+msgstr[1] ""
+
+#: shop/templates/shop/base.html:43
+msgid "Your cart is empty."
+msgstr ""
+
+#: shop/templates/shop/product/detail.html:23
+msgid "Add to cart"
+msgstr ""
+
+#: shop/templates/shop/product/detail.html:28
+msgid "People who bought this also bought"
+msgstr ""
+
+#: shop/templates/shop/product/list.html:6
+#: shop/templates/shop/product/list.html:24
+msgid "Products"
+msgstr ""
+
+#: shop/templates/shop/product/list.html:11
+msgid "Categories"
+msgstr ""
+
+#: shop/templates/shop/product/list.html:14
+msgid "All"
+msgstr ""

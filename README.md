@@ -1586,10 +1586,447 @@
     4- If a coupon is found, you save it in the user's session and display the cart, including the discount applied to it and the updated total amount.
     5- When the user places an order, you save the coupon to the given order.
 
-    <!--<p class="text-right">-->
-    <!--  <a href="{% url "shop:product_list" %}" class="button-->
-    <!--  light">Continue shopping</a>-->
-    <!--  <a href="{% url "orders:order_create" %}" class="button">-->
-    <!--    Checkout-->
-    <!--  </a>-->
-    <!--</p>-->
+    Adding internationalization and localization
+
+    Django offers full internationalization and localization support. It allows you to translate your application into multiple languages and it handles locale-specific formatting for dates, times, numbers, and timezones. Let's clarify the difference between internationalization and localization. Internationalization (frequently abbreviated to i18n)
+    is the process of adapting software for the potential use of different languages and locales, so that it isn't hardwired to a specific language or locale. Localization (abbreviated to l10n) is the process of actually translating the software and adapting it to a particular locale. Django itself is translated into more than 50 languages using its internationalization framework.
+
+    Internationalization and localization settings
+
+    Django provides several settings for internationalization. The following settings are the most relevant ones:
+
+    USE_I18N: A Boolean that specifies whether Django's translation system is enabled. This is True by default.
+    USE_L10N: A Boolean indicating whether localized formatting is enabled. When active, localized formats are used to represent dates and numbers. This is False by default.
+    USE_TZ: A Boolean that specifies whether datetimes are timezone-aware. When you create a project with the startproject command, this is set to True.
+    LANGUAGE_CODE: The default language code for the project. This is in standard language ID format, for example, 'en-us' for American English, or 'en-gb' for British English. This setting requires USE_I18N to be set to True in order to take effect. You can find a list of valid
+
+    language IDs at http://www.i18nguy.com/unicode/language-identifiers.html.
+    LANGUAGES: A tuple that contains available languages for the project. They come in two tuples of a language code and language name. You can see the list of available languages at django.conf.global_settings. When you choose which languages your site will be available in, you set LANGUAGES to a subset of that list.
+    LOCALE_PATHS: A list of directories where Django looks for message files containing translations for the project.
+    TIME_ZONE: A string that represents the timezone for the project. This is set to 'UTC' when you create a new project using the startproject command. You can set it to any other timezone, such as 'Europe/Madrid'.
+    These are some of the internationalization and localization settings available. You can find the full list at https://docs.djangoproject.com/en/3.0/ref/settings/#globalization-i18n-l10n.”
+
+    ++ Internationalization management commands :
+
+    Django includes the following management commands to manage translations:
+
+    makemessages: This runs over the source tree to find all strings marked for translation and creates or updates the .po message files in the locale directory. A single .po file is created for each language.
+    compilemessages: This compiles the existing .po message files to .mo files that are used to retrieve translations.
+    You will need the gettext toolkit to be able to create, update, and compile message files. Most Linux distributions include the gettext toolkit. If you are using macOS, probably the simplest way to install it is via Homebrew, at https://brew.sh/, with the command brew install gettext. You might also need to force link it
+    with the command brew link --force gettext. For Windows, follow the steps at https://docs.djangoproject.com/en/3.0/topics/i18n/translation/#gettext-on-windows.
+
+    How to add translations to a Django project
+
+    Let's take a look at the process of internationalizing your project. You will need to do the following:
+
+    1- Mark strings for translation in your Python code and your templates
+    2- Run the makemessages command to create or update message files that include all translation strings from your code
+    3- Translate the strings contained in the message files and compile them using the compilemessages management command
+
+    How Django determines the current language
+
+    Django comes with a middleware that determines the current language based on the request data. This is the LocaleMiddleware middleware that resides in django.middleware.locale.LocaleMiddleware performs the following tasks:
+
+    If you are using i18n_patterns, that is, you are using translated URL patterns, it looks for a language prefix in the requested URL to determine the current language.
+    If no language prefix is found, it looks for an existing LANGUAGE_SESSION_KEY in the current user's session.
+    If the language is not set in the session, it looks for an existing cookie with the current language. A custom name for this cookie can be provided in the LANGUAGE_COOKIE_NAME setting. By default, the name for this cookie is django_language.
+    If no cookie is found, it looks for the Accept-Language HTTP header of the request.
+    If the Accept-Language header does not specify a language, Django uses the language defined in the LANGUAGE_CODE setting.
+    By default, Django will use the language defined in the LANGUAGE_CODE setting unless you are using LocaleMiddleware. The process described here only applies when using this middleware.
+
+    Preparing your project for internationalization
+    Let's prepare your project to use different languages. You are going to create an English and a Spanish version for your shop. Edit the settings.py file of your project and add the following LANGUAGES setting to it. Place it next to the LANGUAGE_CODE setting:
+
+    LANGUAGES = (
+        ('en', 'English'),
+        ('es', 'Spanish'),
+    )
+
+    “The LANGUAGES setting contains two tuples that consist of a language code and a name. Language codes can be locale-specific, such as en-us or en-gb, or generic, such as en. With this setting, you specify that your application will only be available in English and Spanish. If you don't define a custom LANGUAGES setting, the site will be available in all the languages that Django is translated into.
+
+    Make your LANGUAGE_CODE setting look as follows:
+
+    LANGUAGE_CODE = 'en'
+    Add 'django.middleware.locale.LocaleMiddleware' to the MIDDLEWARE setting. Make sure that this middleware comes after SessionMiddleware because LocaleMiddleware needs to use session data. It also has to be placed before CommonMiddleware because the latter needs an active language to resolve the requested URL. The MIDDLEWARE setting should now look as follows:
+
+    MIDDLEWARE = [
+        'django.middleware.security.SecurityMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.locale.LocaleMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        # ...
+    ]
+
+    +++ The order of middleware classes is very important because each middleware can depend on data set by other middleware executed previously. Middleware is applied for requests in order of appearance in MIDDLEWARE, and in reverse order for responses.
+
+    Create the following directory structure inside the main project directory, next to the manage.py file:
+
+    locale/
+        en/
+        es/
+    The locale directory is the place where message files for your application will reside. Edit the settings.py file again and add the following setting to it:
+
+    LOCALE_PATHS = (
+        os.path.join(BASE_DIR, 'locale/'),
+    )
+
+    Translating Python code
+    To translate literals in your Python code, you can mark strings for translation using the gettext() function included in django.utils.translation. This function translates the message and returns a string. The convention is to import this function as a shorter alias named _ (underscore character).
+
+    You can find all the documentation about translations at https://docs.djangoproject.com/en/3.0/topics/i18n/translation/.
+
+    Standard translations
+
+    The following code shows how to mark a string for translation:
+
+    from django.utils.translation import gettext as _
+    output = _('Text to be translated.')
+
+    Django includes lazy versions for all of its translation functions, which have the suffix _lazy(). When using the lazy functions, strings are translated when the value is accessed, rather than when the function is called (this is why they are translated lazily). The lazy translation functions come
+    in handy when strings marked for translation are in paths that are executed when modules are loaded.
+
+    ++ Using gettext_lazy() instead of gettext() means that strings are translated when the value is accessed. Django offers a lazy version for all translation functions.
+
+    Translations including variables
+
+    The strings marked for translation can include placeholders to include variables in the translations. The following code is an example of a translation string with a placeholder:
+
+    from django.utils.translation import gettext as _
+    month = _('April')
+    day = '14'
+    output = _('Today is %(month)s %(day)s') % {'month': month,
+                                                'day': day}
+    By using placeholders, you can reorder the text variables. For example, an English translation of the previous example might be today is April 14, while the Spanish one might be hoy es 14 de Abril. Always use string interpolation instead of positional interpolation when you have more than one parameter
+    for the translation string. By doing so, you will be able to reorder the placeholder text.
+
+    Plural forms in translations
+
+    For plural forms, you can use ngettext() and ngettext_lazy(). These functions translate singular and plural forms depending on an argument that indicates the number of objects. The following example shows how to use them:
+
+    output = ngettext('there is %(count)d product',
+                      'there are %(count)d products',
+                      count) % {'count': count}
+    Now that you know the basics about translating literals in your Python code, it's time to apply translations to your project.
+
+    Translating your own code
+
+    Edit the settings.py file of your project, import the gettext_lazy() function, and change the LANGUAGES setting as follows to translate the language names:
+
+    from django.utils.translation import gettext_lazy as _
+    LANGUAGES = (
+        ('en', _('English')),
+        ('es', _('Spanish')),
+    )
+
+    Here, you use the gettext_lazy() function instead of gettext() to avoid a circular import, thus translating the languages' names when they are accessed.
+
+    Open the shell and run the following command from your project directory:
+
+    $ django-admin makemessages --all
+
+    You should see the following output:
+
+    processing locale es
+    processing locale en
+    Take a look at the locale/ directory. You should see a file structure like the following:
+
+    en/
+        LC_MESSAGES/
+            django.po
+    es/
+        LC_MESSAGES/
+            django.po
+    A .po message file has been created for each language. Open es/LC_MESSAGES/django.po with a text editor. At the end of the file, you should be able to see the following:
+
+    #: myshop/settings.py:118
+    msgid "English"
+    msgstr ""
+    #: myshop/settings.py:119
+    msgid "Spanish"
+    msgstr ""
+    Each translation string is preceded by a comment showing details about the file and the line where it was found. Each translation includes two strings:
+
+    msgid: The translation string as it appears in the source code.
+    msgstr: The language translation, which is empty by default. This is where you have to enter the actual translation for the given string.
+    Fill in the msgstr translations for the given msgid string, as follows:
+
+    #: myshop/settings.py:118
+    msgid "English"
+    msgstr "Inglés"
+    “#: myshop/settings.py:119
+    msgid "Spanish"
+    msgstr "Español"
+    Save the modified message file, open the shell, and run the following command:
+
+    $ django-admin compilemessages
+
+    If everything goes well, you should see an output like the following:
+
+    processing file django.po in /Users/MDRAHALI/Desktop/Fullstack-Django/Online-Shop/online_shop/locale/es/LC_MESSAGES
+    processing file django.po in /Users/MDRAHALI/Desktop/Fullstack-Django/Online-Shop/online_shop/locale/en/LC_MESSAGES
+
+    “You have translated the language names themselves. Now, let's translate the model field names that are displayed in the site. Edit the models.py file of the orders application and add names marked for translation for the Order model fields as follows:
+
+    from django.utils.translation import gettext_lazy as _
+    class Order(models.Model):
+        first_name = models.CharField(_('first name'),
+                                      max_length=50)
+        last_name = models.CharField(_('last name'),
+                                     max_length=50)
+        email = models.EmailField(_('e-mail'))
+        address = models.CharField(_('address'),
+                                   max_length=250)
+        postal_code = models.CharField(_('postal code'),
+                                       max_length=20)
+        city = models.CharField(_('city'),
+                                max_length=100)
+        # ...
+
+    You have added names for the fields that are displayed when a user is placing a new order. These are first_name, last_name, email, address, postal_code, and city. Remember that you can also use the verbose_name attribute to name the fields.”
+
+    $ django-admin makemessages --all
+    $ django-admin compilemessages
+
+    Translating templates
+    Django offers the {% trans %} and {% blocktrans %} template tags to translate strings in templates. In order to use the translation template tags, you have to add {% load i18n %} at the top of your template to load them.
+
+    The {% trans %} template tag
+
+    The {% trans %} template tag allows you to mark a literal for translation. Internally, Django executes gettext() on the given text. This is how to mark a string for translation in a template:
+
+    {% trans "Text to be translated" %}
+    You can use as to store the translated content in a variable that you can use throughout your template. The following example stores the translated text in a variable called greeting:
+
+    {% trans "Hello!" as greeting %}
+    <h1>{{ greeting }}</h1>
+    The {% trans %} tag is useful for simple translation strings, but it can't handle content for translation that includes variables.
+
+    The {% blocktrans %} template tag
+
+    The {% blocktrans %} template tag allows you to mark content that includes literals and variable content using placeholders. The following example shows you how to use the {% blocktrans %} tag, including a name variable in the content for translation:
+
+    {% blocktrans %}Hello {{ name }}!{% endblocktrans %}
+    You can use with to include template expressions, such as accessing object attributes or applying template filters to
+    variables. You always have to use placeholders for these. You can't access expressions or object attributes inside the blocktrans block. The following example shows you how to use with to include an object attribute to which the capfirst filter is applied:
+
+    {% blocktrans with name=user.name|capfirst %}
+      Hello {{ name }}!
+    {% endblocktrans %}
+
+    ++ Use the {% blocktrans %} tag instead of {% trans %} when you need to include variable content in your translation string.
+
+    - Using the Rosetta translation interface :
+    Rosetta is a third-party application that allows you to edit translations using the same interface as the Django administration site. Rosetta makes it easy to edit .po files and it updates compiled translation files. Let's add it to your project.
+
+    - Install Rosetta via pip using this command:
+
+    $ pip install django-rosetta==0.9.3
+
+    Then, add 'rosetta' to the INSTALLED_APPS setting in your project's settings.py file, as follows:
+
+    INSTALLED_APPS = [
+        # ...
+        'rosetta',
+    ]
+    You need to add Rosetta's URLs to your main URL configuration. Edit the main urls.py file of your project and add the following URL pattern to it:
+
+    urlpatterns = [
+        # ...
+        path('rosetta/', include('rosetta.urls')),
+        path('', include('shop.urls', namespace='shop')),
+    ]
+    Make sure you place it before the shop.urls pattern to avoid an undesired pattern match.
+
+    - Open http://127.0.0.1:8000/admin/ and log in.
+
+    -> http://127.0.0.1:8000/rosetta
+
+    Rosetta uses a different background color to display placeholders. When you translate content, make sure that you keep placeholders untranslated. For example, take the following string:
+
+    %(items)s items, $%(total)s
+    It is translated into Spanish as follows:
+
+    %(items)s productos, $%(total)s
+    You can take a look at the source code that comes along with this chapter to use the same Spanish translations for your project.
+
+    When you add new translations to your production environment, if you serve Django with a real web server, you will have to reload your server after running the compilemessages command, or
+    after saving the translations with Rosetta, for changes to take effect.
+
+    - Fuzzy translations :
+    You might have noticed that there is a FUZZY column in Rosetta. This is not a Rosetta feature; it is provided by gettext. If the fuzzy flag is active for a translation, it will not be included
+    in the compiled message files. This flag marks translation strings that need to be reviewed by a translator. When .po files are updated with new translation strings, it is possible that some
+    translation strings will automatically be flagged as fuzzy. This happens when gettext finds some msgid that has been slightly modified. gettext pairs it with what it thinks was the old
+    translation and flags it as fuzzy for review. The translator should then review fuzzy translations, remove the fuzzy flag, and compile the translation file again.
+
+    URL patterns for internationalization
+    Django offers internationalization capabilities for URLs. It includes two main features for internationalized URLs:
+
+    Language prefix in URL patterns: Adding a language prefix to URLs to serve each language version under a different base URL
+    Translated URL patterns: Translating URL patterns so that every URL is different for each language
+    A reason for translating URLs is to optimize your site for search engines. By adding a language prefix to your patterns, you will be able to index a URL for each language instead of a single URL
+    for all of them. Furthermore, by translating URLs into each language, you will provide search engines with URLs that will rank better for each language.
+
+    Adding a language prefix to URL patterns
+
+    Django allows you to add a language prefix to your URL patterns. For example, the English version of your site can be served under a path starting /en/, and the Spanish version under /es/. To use
+    languages in URL patterns, you have to use the LocaleMiddleware provided by Django. The framework will use it to identify the current language from the requested URL. You added it previously to the
+    MIDDLEWARE setting of your project, so you don't need to do it now.
+
+    Let's add a language prefix to your URL patterns. Edit the main urls.py file of the myshop project and add i18n_patterns(), as follows:
+
+    from django.conf.urls.i18n import i18n_patterns
+    urlpatterns = i18n_patterns(
+     path('admin/', admin.site.urls),
+     path('cart/', include('cart.urls', namespace='cart')),
+     path('orders/', include('orders.urls', namespace='orders')),
+     path('payment/', include('payment.urls', namespace='payment')),
+     path('coupons/', include('coupons.urls', namespace='coupons')),
+     path('rosetta/', include('rosetta.urls')),
+     path('', include('shop.urls', namespace='shop')),
+    )
+    You can combine non-translatable standard URL patterns and patterns under i18n_patterns so that some patterns include a language prefix and others don't. However, it's better to use ”
+
+    Translating models with django-parler
+    Django does not provide a solution for translating models out of the box. You have to implement your own solution to manage content stored in different languages, or use a third-party module for model translation. There are several third-party applications that allow you to translate model fields. Each of them takes a different approach to storing and accessing translations. One of these applications is django-parler. This module offers a very effective way to translate models and it integrates smoothly with Django's administration site.
+
+    django-parler generates a separate database table for each model that contains translations. This table includes all the translated fields and a foreign key for the original object that the translation belongs to. It also contains a language field, since each row stores the content for a single language.
+
+    Installing django-parler
+    Install django-parler via pip using the following command:
+
+    $ pip install django-parler==2.0.1
+
+    “Translating model fields
+
+    Let's add translations for your product catalog. django-parler provides a TranslatableModel model class and a TranslatedFields wrapper to translate model fields. Edit the models.py file inside the shop application directory and add the following import:
+
+    from parler.models import TranslatableModel, TranslatedFields
+    Then, modify the Category model to make the name and slug fields translatable, as follows:
+
+    class Category(TranslatableModel):
+        translations = TranslatedFields(
+            name = models.CharField(max_length=200,
+                                    db_index=True),
+            slug = models.SlugField(max_length=200,
+                                    db_index=True,
+                                    unique=True)
+        )
+    The Category model now inherits from TranslatableModel instead of models.Model and both the name and slug fields are included in the TranslatedFields wrapper.
+
+    Edit the Product model to add translations for the name, slug, and description fields, as follows:
+
+    class Product(TranslatableModel):
+        translations = TranslatedFields(
+            name = models.CharField(max_length=200, db_index=True),
+            slug = models.SlugField(max_length=200, db_index=True)
+            )
+
+django-parler manages translations by generating another model for each translatable model. In the following schema, you can see the fields of the Product model and what the generated ProductTranslation model will look like:
+![](./static/TranslableModel.png)
+
+    The ProductTranslation model generated by django-parler includes the name, slug, and description translatable fields, a language_code field, and a ForeignKey for the master Product object. There is a one-to-many relationship from Product to ProductTranslation. A ProductTranslation object will exist for each available language of each Product object.
+
+    Since Django uses a separate table for translations, there are some Django features that you can't use. It is not possible to use a default ordering by a translated field. You can filter by translated fields in queries, but you can't include a translatable field in the ordering Meta options.
+
+    Edit the models.py file of the shop application and comment out the ordering attribute of the Category Meta class:
+
+    class Category(TranslatableModel):
+        # ...
+        class Meta:
+            # ordering = ('name',)
+            verbose_name = 'category'
+            verbose_name_plural = 'categories'
+
+
+    You can read more about the django-parler module's compatibility with Django at https://django-parler.readthedocs.io/en/latest/compatibility.html.
+    Integrating translations into the administration site
+
+    django-parler integrates smoothly with the Django administration site. It includes a TranslatableAdmin class that overrides the ModelAdmin class provided by Django to manage model translations.
+
+    Edit the admin.py file of the shop application and add the following import to it:
+
+    from parler.admin import TranslatableAdmin
+    Modify the CategoryAdmin and ProductAdmin classes to inherit from TranslatableAdmin instead of ModelAdmin. django-parler doesn't support the prepopulated_fields attribute, but it does support the get_prepopulated_fields() method that
+    provides the same functionality. Let's change this accordingly.
+
+    ++ Admin Translable :
+
+    @admin.register(Category)
+    class CategoryAdmin(TranslatableAdmin):
+        list_display = ['name', 'slug']
+
+    def get_prepopulated_fields(self, request, obj=None):
+        return {'slug': ('name',)}
+
+    $ python manage.py makemigrations shop --name 'translations'
+
+    This migration automatically includes the CategoryTranslation and ProductTranslation models created dynamically by django-parler. It's important to note that this migration deletes the previous existing fields from your models. This means that you will lose that data and will need to set your categories and products again in the administration site after running it.
+
+    Edit the file migrations/0002_translations.py of the shop application and replace the two occurrences of the following line:
+
+    bases=(parler.models.TranslatedFieldsModelMixin, models.Model),
+    with the following one:
+
+    bases=(parler.models.TranslatableModel, models.Model),
+    This is a fix for a minor issue found in the django-parler version you are using. This change is necessary to prevent the migration from failing when applying it. This issue is related to creating translations for existing fields in the model and will probably be fixed in newer django-parler versions.
+
+    Run the following command to apply the migration:
+
+    $ python manage.py migrate shop
+
+
+    “Adapting views for translations
+
+    You have to adapt your shop views to use translation QuerySets. Run the following command to open the Python shell:
+
+    python manage.py shell
+    Let's take a look at how you can retrieve and query translation fields. To get the object with translatable fields translated in a specific language, you can use Django's activate() function, as follows:
+
+    >>> from shop.models import Product
+    >>> from django.utils.translation import activate
+    >>> activate('es')
+    >>> product=Product.objects.first()
+    >>> product.name
+    'Té verde'
+    Another way to do this is by using the language() manager provided by django-parler, as follows:
+
+    >>> product=Product.objects.language('en').first()
+    >>> product.name
+    'Green tea'
+    When you access translated fields, they are resolved using the current language. You can set a different current language for an object to access that specific translation, as follows:
+
+    >>> product.set_current_language('es')
+    >>> product.name
+    'Té verde'
+    >>> product.get_current_language()
+    'es”
+
+    “When performing a QuerySet using filter(), you can filter using the related translation objects with the translations__ syntax, as follows:
+
+    >>> Product.objects.filter(translations__name='Green tea')
+    <TranslatableQuerySet [<Product: Té verde>]>
+    Let's adapt the product catalog views. Edit the views.py file of the shop application and, in the product_list view, find the following line:
+
+    category = get_object_or_404(Category, slug=category_slug)
+    Replace it with the following ones:
+
+    language = request.LANGUAGE_CODE
+    category = get_object_or_404(Category,
+                                 translations__language_code=language,
+                                 translations__slug=category_slug)
+    Then, edit the product_detail view and find the following lines:
+
+    product = get_object_or_404(Product,
+                                id=id,
+                                slug=slug,
+                                available=True)
+    Replace them with the following code:
+
+    language = request.LANGUAGE_CODE
+    product = get_object_or_404(Product,
+                                id=id,
+                                translations__language_code=language,
+                                translations__slug=slug,
+                                available=True)
+    The product_list and product_detail views are now adapted to retrieve objects using translated fields. Run the development server and open http://127.0.0.1:8000/es/ in your browser. You should see the product list page, including all products translated into Spanish”
+
