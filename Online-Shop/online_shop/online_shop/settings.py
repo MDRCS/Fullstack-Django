@@ -133,9 +133,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Payment Gatway - Braintree Config :
 
-BRAINTREE_MERCHANT_ID = '7gpb2bjzhfgztbmy'  # Merchant ID
-BRAINTREE_PUBLIC_KEY = '2283gzrpqdh6xdps'  # Public Key
-BRAINTREE_PRIVATE_KEY = '81a65f77fd61a92640d15d65914faf23'  # Private key
+BRAINTREE_MERCHANT_ID = '..'  # Merchant ID
+BRAINTREE_PUBLIC_KEY = '..'  # Public Key
+BRAINTREE_PRIVATE_KEY = '..'  # Private key
+
+# 7gpb2bjzhfgztbmy
+# 2283gzrpqdh6xdps
+# 81a65f77fd61a92640d15d65914faf23
+
 
 import braintree
 
