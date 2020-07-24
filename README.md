@@ -2250,10 +2250,339 @@ django-parler manages translations by generating another model for each translat
     $ python manage.py loaddata subjects.json
 
     + Coursera platform :
+
         brew install memcached
         memcached -l 127.0.0.1:11211
         pip install python-memcached==1.59
-
         pip install django-memcache-status==2.2
+
+    ++ Create a Chat Server using Django Channels :
+
+    - Features that will be implemented for this app :
+    * Add Channels to your project
+    * Build a WebSocket consumer and appropriate routing
+    * Implement a WebSocket client
+    * Enable a channel layer with Redis
+    * Make your consumer fully asynchronous
+
+    - Creating a chat application
+
+    You are going to implement a chat server to provide students with a chat room for each course. Students enrolled on a course will be able to access the course chat
+    room and exchange messages in real time. You will use Channels to build this functionality. Channels is a Django application that extends Django to handle protocols
+    that require long-running connections, such as WebSockets, chatbots, or MQTT (a lightweight publish/subscribe message transport commonly used in Internet of things projects).
+
+    $ cd coursera
+    $ django-admin startapp chat
+
+    Implementing the chat room view
+    You will provide students with a different chat room for each course. You need to create a view for students to join the chat room of a given course. Only students who are enrolled on a
+    course will be able to access the course chat room.
+
+    ++ Going Live :
+
+    It's time to deploy your Django project in a production environment. You are going to follow these steps to get your project live:
+
+    Configure project settings for a production environment
+    Use a PostgreSQL database
+    Set up a web server with uWSGI and NGINX
+    Serve static assets through NGINX
+    Secure connections using SSL
+    Use Daphne to serve Django Channels
+
+    - Managing settings for multiple environments
+    In real-world projects, you will have to deal with multiple environments. You will have at least a local and a production environment, but you could have other environments as well,
+    such as testing or preproduction environments. Some project settings will be common to all environments, but others will have to be overridden per environment.
+
+    These files are as follows:
+
+    base.py: The base settings file that contains common settings (previously settings.py)
+    local.py: Custom settings for your local environment
+    pro.py: Custom settings for the production environment
+
+    These are the settings for the production environment. Let's take a closer look at each of them:
+
+    - DEBUG: Setting DEBUG to False should be mandatory for any production environment. Failing to do so will result in the traceback information and sensitive configuration data being exposed to everyone.
+    - ADMINS: When DEBUG is False and a view raises an exception, all information will be sent by email to the people listed in the ADMINS setting. Make sure that you replace the name/email tuple with your own information.
+    - ALLOWED_HOSTS: Django will only allow the hosts included in this list to serve the application. This is a security measure. You include the asterisk symbol, *, to refer to all hostnames. You will limit the hostnames
+      that can be used for serving the application later.
+    - DATABASES: You just keep this setting empty. We are going to cover the database setup for production later.”
+
+    Checking your project
+    Django includes the check management command for checking your project at any time. This command inspects the applications installed in your Django project and outputs any errors or warnings. If you include the --deploy option, additional checks only relevant for production use will be triggered. Open the shell and run the following command to perform a check:
+
+    $ python manage.py check --deploy
+    You will see output with no errors, but several warnings. This means the check was successful, but you should go through the warnings to see if there is anything more you can do to make your project safe for production. We are not going to go deeper into this, but keep in mind that you should check your project before production use to look for any relevant issues.”
+
+    Installing uWSGI
+    Throughout this book, you have been using the Django development server to run projects in your local environment. However, you need a real web server for deploying your application in a production environment.
+    uWSGI is an extremely fast Python application server. It communicates with your Python application using the WSGI specification. uWSGI translates web requests into a format that your Django project can process.
+
+    Install uWSGI using the following command:
+
+    $ pip install uwsgi==2.0.18
+
+    In order to build uWSGI, you will need a C compiler, such as gcc or clang. In a Linux environment, you can install a C compiler with the command apt-get install build-essential.
+    If you are using macOS, you can install uWSGI with the Homebrew package manager using the command brew install uwsgi.”
+
+    -- Configuring uWSGI
+    You can run uWSGI from the command line. Open the shell and run the following command from the educa project directory:
+
+    sudo uwsgi --module=educa.wsgi:application \
+    --env=DJANGO_SETTINGS_MODULE=educa.settings.pro \
+    --master --pidfile=/tmp/project-master.pid \
+    --http=127.0.0.1:8000 \
+    --uid=1000 \
+    --virtualenv=/env/bookmarks/
+
+    Replace the path in the virtualenv option with your actual virtual environment directory. If you are not using a virtual environment, you can skip this option.
+
+    You might have to prepend sudo to this command if you don't have the required permissions. You might also need to add the --plugin=python3 option if the module is not loaded by default.
+
+    With this command, you can run uWSGI on your localhost with the following options:
+
+    You use the educa.wsgi:application WSGI callable
+    You load the settings for the production environment
+    You tell uWSGI to use the educa virtual environment
+    If you are not running the command within the project directory, include the option --chdir=/path/to/educa/ with the path to your project.
+
+    Open http://127.0.0.1:8000/ in your browser.
+
+    In the uwsgi.ini file, you define the following variables:
+
+    projectname: The name of your Django project, which is educa.
+    base: The absolute path to the educa project. Replace it with the absolute path to your project.
+    These are custom variables that you will use in the uWSGI options. You can define any other variables you like as long as the names are different to the uWSGI options.
+
+    You set the following options:
+
+    master: Enable the master process.
+    virtualenv: The path to your virtual environment. Replace this path with the appropriate path.
+    pythonpath: The paths to add to your Python path.
+    chdir: The path to your project directory, so that uWSGI changes to that directory before loading the application.
+    env: Environment variables. You include the DJANGO_SETTINGS_MODULE variable, pointing to the settings for the production environment.
+    module: The WSGI module to use. You set this to the application callable contained in the wsgi module of your project.
+    socket: The UNIX/TCP socket to bind the server.
+    chmod-socket: The file permissions to apply to the socket file. In this case, you use 666 so that NGINX can read/write the socket.
+    The socket option is intended for communication with some third file. In this case, you use 666 so that NGINX can read/write the socket.
+    Now, you can run uWSGI with your custom configuration using this command:
+
+    uwsgi --ini config/uwsgi.ini
+    You will not be able to access your uWSGI instance from your browser now, since it's running through a socket. Let's complete the production environment.”
+
+    Installing NGINX
+    When you are serving a website, you have to serve dynamic content, but you also need to serve static files, such as CSS style sheets, JavaScript files, and images. While uWSGI is capable of serving static files,
+    it adds an unnecessary overhead to HTTP requests and therefore, it is encouraged to set up a web server, such as NGINX, in front of it.
+    NGINX is a web server focused on high concurrency, performance, and low memory usage. NGINX also acts as a reverse proxy, receiving HTTP requests and routing them to different backends. As mentioned, generally,
+    you will use a web server, such as NGINX, in front of uWSGI for serving static files efficiently and quickly, and you will forward dynamic requests to uWSGI workers. By using NGINX, you can also apply rules and benefit
+    from its reverse proxy capabilities.
+
+    Install NGINX with the following command:
+
+    $ sudo apt-get install nginx
+    If you are using macOS, you can install NGINX using the command brew install nginx.
+
+    $ sudo nginx
+
+## + The production environment
+-> The following diagram shows the request/response cycle of the production environment that you are setting up:
+
+![](./static/architecture.png)
+
+The following will happen when the client browser sends an HTTP request:
+
+NGINX receives the HTTP request
+NGINX delegates the request to uWSGI through a socket
+uWSGI passes the request to Django for processing
+Django returns an HTTP response that is passed back to NGINX, which in turn passes it back to the client browser.
+
+    The default configuration file for NGINX is named nginx.conf and it usually resides in any of these three directories: /usr/local/nginx/conf, /etc/nginx, or /usr/local/etc/nginx.
+
+    Locate your nginx.conf configuration file and add the following include directive inside the http block:
+
+    http {
+        include /home/projects/educa/config/nginx.conf;
+        # ...
+    }
+    Replace /home/projects/educa/config/nginx.conf with the path to the configuration file you created for the educa project. In this code, you include the NGINX configuration file for your project in the default NGINX configuration.
+
+    Open a shell and run uWSGI if you are not running it yet:
+
+    uwsgi --ini config/uwsgi.ini
+    Open a second shell and reload NGINX with the following command:
+
+    sudo nginx -s reload
+    Whenever you want to stop NGINX, you can gracefully do so with the following command:
+
+    sudo nginx -s quit
+    If you want to quickly stop NGINX, instead of quit use the signal stop. The quit signal waits for worker processes to finish serving current requests, while the stop signal stops NGINX abruptly.
+
+    Since you are using a sample domain name, you need to redirect it to your local host. Edit your /etc/hosts file and add the following line[…]”
+
+    Open http://educaproject.com/ in your browser. You should be able to see your site, still without any static assets loaded. Your production environment is almost ready.
+
+    Now you can restrict the hosts that can serve your Django project. Edit the production settings file settings/pro.py of your project and change the ALLOWED_HOSTS setting, as follows:
+
+    ALLOWED_HOSTS = ['educaproject.com', 'www.educaproject.com']
+    Django will now only serve your application if it's running under any of these hostnames.”
+
+![](./static/prod_ver_nginx_static_files.png)
+
+    Securing connections with SSL/TLS
+    The Transport Layer Security (TLS) protocol is the standard for serving websites through a secure connection. The TLS predecessor is Secure Sockets Layer (SSL). Although SSL is now deprecated, in multiple libraries and online documentation you will find references to both the terms TLS and SSL. It's strongly encouraged that you serve your websites under HTTPS. You are going to configure an SSL/TLS certificate in NGINX to serve your site securely.
+
+    Creating an SSL/TLS certificate
+
+    Create a new directory inside the educa project directory and name it ssl. Then, generate an SSL/TLS certificate from the command line with the following command:
+
+    sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ssl/educa.key -out ssl/educa.crt
+    You are generating a private key and a 2048-bit SSL/TLS certificate that is valid for one year.
+
+    $ sudo nginx -s reload
+
+    Configuring your Django project for SSL/TLS
+
+    Django comes with specific settings for SSL/TLS support. Edit the settings/pro.py settings file and add the following settings to it:
+
+    SECURE_SSL_REDIRECT = True
+    CSRF_COOKIE_SECURE = True
+    These settings are as follows:
+
+    SECURE_SSL_REDIRECT: Whether HTTP requests have to be redirected to HTTPS
+    CSRF_COOKIE_SECURE: Has to be set for establishing a secure cookie for cross-site request forgery (CSRF) protection
+    Django will now redirect HTTP requests to HTTPS, and cookies for CSRF protection will now be secure.
+
+    import os
+    import django
+    from channels.routing import get_default_application
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'educa.settings')
+    django.setup()
+    application = get_default_application()
+    You are loading the default ASGI application using Channels instead of the standard Django ASGI module. You can find more information about deploying Daphne with protocol servers at https://channels.readthedocs.io/en/latest/deploying.html#run-protocol-servers.
+
+    Open a new shell and set the DJANGO_SETTINGS_MODULE environment variable with the production environment using the following command:
+
+    export DJANGO_SETTINGS_MODULE=educa.settings.pro
+    In the same shell, from the educa project directory run the following command:
+
+    daphne -u /tmp/daphne.sock educa.asgi:application
+
+    Using secure connections for WebSockets
+    You have configured NGINX to use secure connections through SSL/TLS. You need to change ws (WebSocket) connections to use the wss (WebSocket Secure) protocol now, in the same way that HTTP connections are now being served through HTTPS.
+
+    Edit the chat/room.html template of the chat application and find the following line in the domready block:
+
+    var url = 'ws://' + window.location.host +
+    Replace that line with the following one:
+
+    var url = 'wss://' + window.location.host +
+    Now you will be explicitly connecting to a secure WebSocket.
+
+    Using secure connections for WebSockets
+    You have configured NGINX to use secure connections through SSL/TLS. You need to change ws (WebSocket) connections to use the wss (WebSocket Secure) protocol now, in the same way that HTTP connections are now being served through HTTPS.
+
+    Edit the chat/room.html template of the chat application and find the following line in the domready block:
+
+    var url = 'ws://' + window.location.host +
+    Replace that line with the following one:
+
+    var url = 'wss://' + window.location.host +
+    Now you will be explicitly connecting to a secure WebSocket.
+
+![](./static/daphne_websocket.png)
+
+    Creating a custom middleware
+    You already know the MIDDLEWARE setting, which contains the middleware for your project. You can think of it as a low-level plugin system, allowing you to implement hooks that get executed in the request/response process. Each middleware
+    is responsible for some specific action that will be executed for all HTTP requests or responses.
+
+    Creating a subdomain middleware
+
+    You are going to create a custom middleware to allow courses to be accessible through a custom subdomain. Each course detail URL, which looks like https://educaproject.com/course/django/, will also be accessible through the subdomain that makes use of the course slug, such as https://django.educaproject.com/. Users will be able to use the subdomain as a shortcut to access the course details. Any requests to subdomains will be redirected to each corresponding course detail URL.
+    Middleware can reside anywhere within your project. However, it's recommended to create a middleware.py file in your application directory.”
+
+    “Create a new file inside the courses application directory and name it middleware.py. Add the following code to it:
+
+    from django.urls import reverse
+    from django.shortcuts import get_object_or_404, redirect
+    from .models import Course
+    def subdomain_course_middleware(get_response):
+        """
+        Subdomains for courses
+        """
+        def middleware(request):
+            host_parts = request.get_host().split('.')
+            if len(host_parts) > 2 and host_parts[0] != 'www':
+                # get course for the given subdomain
+                course = get_object_or_404(Course, slug=host_parts[0])
+                course_url = reverse('course_detail',
+                                     args=[course.slug])
+                # redirect current request to the course_detail view
+                url = '{}://{}{}'.format(request.scheme,
+                                         '.'.join(host_parts[1:]),
+                                         course_url)
+                return redirect(url)
+            response = get_response(request)
+            return response
+        return middleware
+    When an HTTP request is received, you perform the following tasks:
+
+    You get the hostname that is being used in the request and divide it into parts. For example, if the user is accessing mycourse.educaproject.com, you generate the list ['mycourse', 'educaproject', 'com'].
+    You check whether the hostname includes a subdomain by checking whether the split generated more than two elements. If the hostname includes a subdomain, and this is not www, you try to get the course with the slug provided in the subdomain.
+    If a course is not found, you raise an HTTP 404 exception. Otherwise, you redirect the browser to the course detail URL[…]”
+
+
+    Edit the settings/pro.py file and modify the ALLOWED_HOSTS setting, as follows:
+
+    ALLOWED_HOSTS = ['.educaproject.com']
+    A value that begins with a period is used as a subdomain wildcard; '.educaproject.com' will match educaproject.com and any subdomain for this domain, for example course.educaproject.com and django.educaproject.com.
+
+    Serving multiple subdomains with NGINX
+
+    You need NGINX to be able to serve your site with any possible subdomain. Edit the config/nginx.conf file of the educa project and replace the two occurrences of the following line:
+
+    server_name  www.educaproject.com educaproject.com;
+    with the following one:
+
+    server_name  *.educaproject.com educaproject.com;
+    By using the asterisk, this rule applies to all subdomains of educaproject.com. In order to test your middleware locally, you need to add any subdomains you want to test to /etc/hosts. For testing the middleware with a Course object with the slug django, add the following line to your /etc/hosts file:
+
+    127.0.0.1  django.educaproject.com
+    Stop and start uWSGI again, and reload NGINX with the following command to keep track of the latest configuration:
+
+    sudo nginx -s reload
+    Then, open https://django.educaproject.com/ in your browser. The middleware will find the course by the subdomain and redirect your browser to https://educaproject.com/course/django/.”
+
+    Edit the settings/pro.py file and modify the ALLOWED_HOSTS setting, as follows:
+
+    ALLOWED_HOSTS = ['.educaproject.com']
+    A value that begins with a period is used as a subdomain wildcard; '.educaproject.com' will match educaproject.com and any subdomain for this domain, for example course.educaproject.com and django.educaproject.com.
+
+    Serving multiple subdomains with NGINX
+
+    You need NGINX to be able to serve your site with any possible subdomain. Edit the config/nginx.conf file of the educa project and replace the two occurrences of the following line:
+
+    server_name  www.educaproject.com educaproject.com;
+    with the following one:
+
+    server_name  *.educaproject.com educaproject.com;
+    By using the asterisk, this rule applies to all subdomains of educaproject.com. In order to test your middleware locally, you need to add any subdomains you want to test to /etc/hosts. For testing the middleware with a Course object with the slug django, add the following line to your /etc/hosts file:
+
+    127.0.0.1  django.educaproject.com
+    Stop and start uWSGI again, and reload NGINX with the following command to keep track of the latest configuration:
+
+    sudo nginx -s reload
+    Then, open https://django.educaproject.com/ in your browser. The middleware will find the course by the subdomain and redirect your browser to https://educaproject.com/course/django/.”
+
+    This is your enroll_reminder command. The preceding code is as follows:
+
+    The Command class inherits from BaseCommand.
+    You include a help attribute. This attribute provides a short description of the command that is printed if you run the command python manage.py help enroll_reminder.
+    You use the add_arguments() method to add the --days named argument. This argument is used to specify the minimum number of days a user has to be registered, without having enrolled on any course, in order to receive the reminder.
+    The handle() command contains the actual command. You get the days attribute parsed from the command line. You use the timezone utility provided by Django to retrieve the current timezone-aware date with timezone.now().date(). (You can set the timezone for your project with the TIME_ZONE setting.) You retrieve the users who have been registered for more than the specified days and are not enrolled on any courses yet. You achieve this by annotating the QuerySet with the total number of courses each user is enrolled on. You generate the reminder email for each user and append it to the emails list. Finally, you send the emails using the send_mass_mail() function, which is optimized to open[…]”
+
+    Django also includes a utility to call management commands using Python. You can run management commands from your code as follows:
+
+    from django.core import management
+    management.call_command('enroll_reminder', days=20)
+    Congratulations! You can now create custom management commands for your applications and schedule them when needed.
 
 
