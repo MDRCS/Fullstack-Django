@@ -1,4 +1,4 @@
-# Django-REST
+# Fullstack Django :
 
     + setting up dev environment :
 
@@ -2231,5 +2231,29 @@ django-parler manages translations by generating another model for each translat
     >>> r.suggest_products_for([lcd_tv, iphone_xs])
     [<Product: IPOD>, <Product: ART>]
 
+    Summary
+
+    In this chapter, you created a coupon system using sessions. You also learned the basics of internationalization and localization for Django projects. You marked code and template strings
+    for translation, and you discovered how to generate and compile translation files. You also installed Rosetta in your project to manage translations through a browser interface. You translated
+    URL patterns and you created a language selector to allow users to switch the language of the site. Then, you used django-parler to translate models and you used django-localflavor to validate
+    localized form fields. Finally, you built a recommendation engine using Redis to recommend products that are usually purchased together.
+
+    + TIPS for database :
+    - you can dumb data of a database table using this command in JSON format :
+    $ python manage.py dumpdata orders --indent=2
+    $ python manage.py dumpdata --help # for more commands
+
+    mkdir orders/fixtures
+    python manage.py dumpdata orders --indent=2 --output=courses/fixtures/orders.json
+    Run the development server and use the administration site to remove the subjects you created. Then, load the fixture into the database using the following command:
+
+    $ python manage.py loaddata subjects.json
+
+    + Coursera platform :
+        brew install memcached
+        memcached -l 127.0.0.1:11211
+        pip install python-memcached==1.59
+
+        pip install django-memcache-status==2.2
 
 
