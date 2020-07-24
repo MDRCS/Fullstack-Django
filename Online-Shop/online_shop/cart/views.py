@@ -5,6 +5,7 @@ from .forms import CartAddProductForm
 from .cart import Cart
 from shop.models import Product
 from coupons.forms import CouponForm
+from shop.recommender import Recommender
 
 
 @require_POST
@@ -35,5 +36,14 @@ def CartProductsDetail(request):
         item['update_quantity_form'] = CartAddProductForm(initial={'quantity': item['quantity'], 'override': True})
 
     coupon_apply_form = CouponForm()
-    context = {'cart': cart, 'coupon_apply_form': coupon_apply_form}
+    r = Recommender()
+    cart_products = [item['product'] for item in cart]
+    recommended_products = r.suggest_products_for(cart_products, max_results=4)
+    print(recommended_products)
+    context = {
+        'cart': cart,
+        'coupon_apply_form': coupon_apply_form,
+        'recommended_products': recommended_products
+    }
+
     return render(request, 'cart/detail.html', context)

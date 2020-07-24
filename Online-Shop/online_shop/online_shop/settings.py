@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'localflavor',
     'parler',
     'rosetta',
     'django.contrib.admin',
@@ -112,7 +113,7 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-
+# for locale format of dates, Decimals
 USE_L10N = True
 
 USE_TZ = True
@@ -132,9 +133,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Payment Gatway - Braintree Config :
 
-BRAINTREE_MERCHANT_ID = '..'  # Merchant ID
-BRAINTREE_PUBLIC_KEY = '..'  # Public Key
-BRAINTREE_PRIVATE_KEY = '..'  # Private key
+BRAINTREE_MERCHANT_ID = '7gpb2bjzhfgztbmy'  # Merchant ID
+BRAINTREE_PUBLIC_KEY = '2283gzrpqdh6xdps'  # Public Key
+BRAINTREE_PRIVATE_KEY = '81a65f77fd61a92640d15d65914faf23'  # Private key
 
 import braintree
 
@@ -168,3 +169,10 @@ PARLER_LANGUAGES = {
             'hide_untranslated': False,
         }
     }
+
+# Redis for recommandation engine :
+
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB = 1
+

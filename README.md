@@ -2030,3 +2030,206 @@ django-parler manages translations by generating another model for each translat
                                 available=True)
     The product_list and product_detail views are now adapted to retrieve objects using translated fields. Run the development server and open http://127.0.0.1:8000/es/ in your browser. You should see the product list page, including all products translated into Spanish”
 
+    Format localization
+    Depending on the user's locale, you might want to display dates, times, and numbers in different formats. Localized formatting can be activated by changing the USE_L10N setting to True in the settings.py file of your project.
+    When USE_L10N is enabled, Django will try to use a locale-specific format whenever it outputs a value in a template. You can see that decimal numbers in the English version of your site are displayed with a dot separator for decimal places, while in the Spanish version,
+    they are displayed using a comma. This is due to the locale formats specified for the es locale by Django.
+
+    Normally, you will set the USE_L10N setting to True and let Django apply the format localization for each locale. However, there might be situations in which you don't want to use localized values. This is especially relevant when outputting JavaScript or JSON that has to provide a machine-readable format.
+
+    Django offers a {% localize %} template tag that allows you to turn on/off localization for template fragments. This gives you control over localized formatting. You will have to load the l10n tags to be able to use this template tag. The following is an example of how to turn localization on and off in a template:
+
+    {% load l10n %}
+    {% localize on %}
+      {{ value }}
+    {% endlocalize %}
+
+    {% localize off %}
+     {{ value }}
+    {% endlocalize %}
+    Django also offers the localize and unlocalize template filters to force or avoid the localization of a value. These filters can be applied as follows:
+
+    {{ value|localize }}
+    {{ value|unlocalize }}
+    You can also create custom format files to specify locale formatting. You can find further information about format localization at https://docs.djangoproject.com/en/3.0/topics/i18n/formatting/.
+
+    “Using django-localflavor to validate form fields
+    django-localflavor is a third-party module that contains a collection of utils, such as form fields or model fields, that are specific for each country. It's very useful for validating local regions, local phone numbers, identity card numbers, social security numbers, and so on. The package is organized into a series of modules named after ISO 3166 country codes.
+
+    Install django-localflavor using the following command:
+
+    $ pip install django-localflavor==3.0.1
+    Edit the settings.py file of your project and add localflavor to the INSTALLED_APPS setting, as follows:
+
+    INSTALLED_APPS = [
+        # ...
+        'localflavor',
+    ]
+    You are going to add the United States' zip code field so that a valid United States zip code is required to create a new order.
+
+    Edit the forms.py file of the orders application and make it look as follows:
+
+    from django import forms
+    from localflavor.us.forms import USZipCodeField
+    from .models import Order
+    class OrderCreateForm(forms.ModelForm):
+        postal_code = USZipCodeField()
+        class Meta:
+            model = Order
+            fields = ['first_name', 'last_name', 'email', 'address',
+                      'postal_code', 'city']
+
+    You import the USZipCodeField field from the us package of localflavor and use it for the postal_code field of the OrderCreateForm form.
+
+    This is just a brief example of how to use a custom field from localflavor in your own project for validation purposes. The local components
+    provided by localflavor are very useful for adapting your application to specific countries. You can read the django-localflavor documentation
+    and see all available local components for each country at https://django-localflavor.readthedocs.io/en/latest/.
+
+
+    Building a recommendation engine
+
+    A recommendation engine is a system that predicts the preference or rating that a user would give to an item. The system selects relevant items for a user based on their behavior and the knowledge it has about them. Nowadays, recommendation systems are used in many online services.
+    They help users by selecting the stuff they might be interested in from the vast amount of available data that is irrelevant to them. Offering good recommendations enhances user engagement. E-commerce sites also benefit from offering relevant product recommendations by increasing their average revenue per user.
+    You are going to create a simple, yet powerful, recommendation engine that suggests products that are usually bought together. You will suggest products based on historical sales, thus identifying products that are usually bought together. You are going to suggest complementary products in two different scenarios:
+    Product detail page: You will display a list of products that are usually bought with the given product. This will be displayed as users who bought this also bought X, Y, Z. You need a data structure that allows you to store the number of times that each product has been bought together with the product being displayed.
+    Cart detail page: Based on the products users add to the cart, you are going to suggest products that are usually bought together with these ones. In this case, the score you calculate to obtain related products has to be aggregated.
+    You are going to use Redis to store products that are purchased together. Remember that you already used Redis in Chapter 6, Tracking User Actions. If you haven't installed Redis yet, you can find installation instructions in that chapter.”
+
+    “Recommending products based on previous purchases”
+
+    You will recommend products to users based on what they have added to the cart. You are going to store a key in Redis for each product bought on your site. The product key will contain a Redis sorted set with scores. You will increment the score by 1 for each product bought together every time a new purchase is completed. The sorted set will allow you to give scores to products that are bought together.
+
+    “Remember to install redis-py in your environment using the following command:
+
+    pip install redis==3.4.1
+    Edit the settings.py file of your project and add the following settings to it:
+
+    REDIS_HOST = 'localhost'
+    REDIS_PORT = 6379
+    REDIS_DB = 1
+    These are the settings required to establish a connection with the Redis server. Create a new file inside the shop application directory and name it recommender.py. Add the following code to it:
+
+    import redis
+    from django.conf import settings
+    from .models import Product
+    # connect to redis
+    r = redis.Redis(host=settings.REDIS_HOST,
+                    port=settings.REDIS_PORT,
+                    db=settings.REDIS_DB)
+    class Recommender(object):
+        def get_product_key(self, id):
+            return f'product:{id}:purchased_with'
+        def products_bought(self, products):
+            product_ids = [p.id for p in products]
+            for product_id in product_ids:
+                for with_id in product_ids:
+                    # get the other products bought with each product
+                    if product_id != with_id:
+                        # increment score for product purchased together
+                        r.zincrby(self.get_product_key(product_id),
+                                  1,
+                                  with_id)
+    This is the Recommender class that will allow you to store product purchases and retrieve product suggestions for a given product or products.
+
+    The get_product_key() method receives an ID of a Product object and builds the Redis key for the sorted set where related products are stored, which looks like product:[id]:purchased_with.
+
+    The products_bought() method receives a list of Product objects that have been bought together (that is, belong to the same order).
+    In this method, you perform the following tasks:
+    You get the product IDs for the given Product objects.
+
+
+    “You now have a method to store and score the products that were bought together. Next, you need a method to retrieve the products that were bought together for a list of given products. Add the following suggest_products_for() method to the Recommender class:
+
+    def suggest_products_for(self, products, max_results=6):
+        product_ids = [p.id for p in products]
+        if len(products) == 1:
+            # only 1 product
+            suggestions = r.zrange(
+                             self.get_product_key(product_ids[0]),
+                             0, -1, desc=True)[:max_results]
+        else:
+            # generate a temporary key
+            flat_ids = ''.join([str(id) for id in product_ids])
+            tmp_key = f'tmp_{flat_ids}'
+            # multiple products, combine scores of all products
+            # store the resulting sorted set in a temporary key
+            keys = [self.get_product_key(id) for id in product_ids]
+            r.zunionstore(tmp_key, keys)
+            # remove ids for the products the recommendation is for
+            r.zrem(tmp_key, *product_ids)
+            # get the product ids by their score, descendant sort
+            suggestions = r.zrange(tmp_key, 0, -1,
+                                   desc=True)[:max_results]
+            # remove the temporary key
+            r.delete(tmp_key)
+        suggested_products_ids = [int(id) for id in suggestions]
+        # get suggested products and sort by order of appearance
+        suggested_products = list(Product.objects.filter(id__in=suggested_products_ids))
+        suggested_products.sort(key=lambda x: suggested_products_ids.index(x.id))
+        return suggested_products
+    The suggest_products_for() method receives the following parameters:
+
+    products: This is a list of Product objects to get recommendations for. It can contain one or more products.
+    max_results: This is an integer that represents the maximum number of recommendations to return.
+
+    In this method, you perform the following actions:
+
+    You get the product IDs for the given Product objects.
+    If only one product is given, you retrieve the ID of the products that were bought together with the given product, ordered by the total number of times that they were bought together.
+    To do so, you use Redis' ZRANGE command. You limit the number of results to the number specified in the max_results attribute (6 by default).
+    If more than one product is given, you generate a temporary Redis key built with the IDs of the products.
+    You combine and sum all scores for the items contained in the sorted set of each of the given products. This is done using the Redis ZUNIONSTORE command. The ZUNIONSTORE command performs
+    a union of the sorted sets with the given keys, and stores the aggregated sum of scores of the elements in a new Redis key. You can read more about this command at https://redis.io/commands/ZUNIONSTORE.
+    You save the aggregated scores in the temporary key.
+    Since you are aggregating scores, you might obtain the same products you are getting recommendations for. You remove them from the generated sorted set using[…]”
+
+    + Recommandation simulation :
+
+    >>> from shop.models import Product
+    >>> iphone_xs = Product.objects.get(translations__name='Iphone XS')
+    >>> lcd_tv = Product.objects.get(translations__name='LCD Television')
+    >>> ipod = Product.objects.get(translations__name='IPOD')
+    >>> art = Product.objects.get(translations__name='ART')
+
+    Then, add some test purchases to the recommendation engine:
+
+    >>> from shop.recommender import Recommender
+    >>> r = Recommender()
+    >>> r.products_bought([iphone_xs, lcd_tv])
+    >>> r.products_bought([iphone_xs, ipod])
+    >>> r.products_bought([lcd_tv, art, ipod])
+    >>> r.products_bought([iphone_xs, ipod])
+    >>> r.products_bought([art, ipod])
+    >>> r.products_bought([lcd_tv, iphone_xs])
+
+    You have stored the following scores:
+
+    art:  lcd_tv (2), ipod (2), iphone_xs (1)
+    lcd_tv:    art (2), ipod (1), iphone_xs (1)
+    iphone_xs:  art (1), ipod (1), lcd_tv(1)
+    ipod: black_tea (2), lcd_tv (1), iphone_xs (1)
+
+    Let's activate a language to retrieve translated products and get product recommendations to buy together with a given single product:
+
+    >>> from django.utils.translation import activate
+    >>> activate('en')
+    >>> r.suggest_products_for([art])
+    [<Product: IPOD>, <Product: LCD Television>]
+    >>> r.suggest_products_for([lcd_tv])
+    [<Product: Iphone XS>, <Product: ART>, <Product: IPOD>]
+    >>> r.suggest_products_for([iphone_xs])
+    [<Product: IPOD>, <Product: LCD Television>]
+    >>> r.suggest_products_for([ipod])
+    [<Product: ART>, <Product: Iphone XS>, <Product: LCD Television>]
+
+    You can see that the order for recommended products is based on their score. Let's get recommendations for multiple products with aggregated scores:
+
+    >>> r.suggest_products_for([iphone_xs, art])
+    [<Product: IPOD>, <Product: LCD Television>]
+    >>> r.suggest_products_for([ipod, art])
+    [<Product: LCD Television>, <Product: Iphone XS>]
+    >>> r.suggest_products_for([lcd_tv, iphone_xs])
+    [<Product: IPOD>, <Product: ART>]
+
+
+
